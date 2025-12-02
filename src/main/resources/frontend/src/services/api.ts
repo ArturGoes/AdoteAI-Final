@@ -11,10 +11,12 @@ const api = axios.create({
 
 export interface Animal {
   id: number;
+  nome: string;
   raca: string;
   idade: number;
   sexo: string;
   tamanho: string;
+  localizacao: string;
   temperamento: string;
   cor: string;
   vacinasTomadas: string[];
@@ -36,6 +38,7 @@ export interface MatchResponse {
   animal?: Animal;
   matchScore?: number;
   message?: string;
+  iaReasoning?: string;
 }
 
 export const animalApi = {

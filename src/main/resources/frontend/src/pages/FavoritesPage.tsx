@@ -1,16 +1,58 @@
 import { Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Heart, Loader2 } from "lucide-react"; // Adicionei Loader2 para loading state
+import { useState, useEffect } from "react";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { mockAnimals } from "@/data/mockAnimals";
+import { animalApi, Animal } from "@/services/api";
 import AnimalCard from "@/components/AnimalCard";
 import Button from "@/components/Button";
 
 const FavoritesPage = () => {
   const { favorites } = useFavorites();
+  const [favoriteAnimals, setFavoriteAnimals] = useState<Animal[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const favoriteAnimals = mockAnimals.filter((animal) =>
-    favorites.includes(animal.id)
-  );
+  useEffect(() => {
+    const fetchFavoriteAnimals = async () => {
+      // Se não houver IDs favoritos, não precisamos chamar a API
+      if (favorites.length === 0) {
+        setFavoriteAnimals([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // Estratégia: Buscamos todos os animais e filtramos no front.
+        // (Idealmente, o backend teria um endpoint /api/animais?ids=1,2,3)
+        const response = await animalApi.getAll();
+        const allAnimals = response.data;
+        
+        // Filtra apenas os animais que estão na lista de IDs favoritos
+        const filtered = allAnimals.filter((animal) => 
+          favorites.includes(animal.id)
+        );
+        
+        setFavoriteAnimals(filtered);
+      } catch (error) {
+        console.error("Erro ao carregar favoritos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavoriteAnimals();
+  }, [favorites]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2 text-primary">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span>Carregando seus favoritos...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-16">

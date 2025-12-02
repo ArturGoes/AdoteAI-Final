@@ -16,7 +16,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>ai</name>
     <description>Hands-On project for Spring Boot</description>
-    <url/>./mvnw clean install
+    <url/>
     <licenses>
         <license/>
     </licenses>
