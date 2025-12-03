@@ -1,4 +1,4 @@
-import { Animal } from "@/services/api";
+import { Animal } from "@/types";
 
 export const mockAnimals: Animal[] = [
   {

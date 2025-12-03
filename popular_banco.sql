@@ -3,6 +3,40 @@ CREATE SCHEMA IF NOT EXISTS adocao_animais;
 TRUNCATE TABLE adocao_animais.fotos_animal CASCADE;
 TRUNCATE TABLE adocao_animais.animal CASCADE;
 
+CREATE TABLE IF NOT EXISTS adocao_animais.animal (
+    id_animal BIGSERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    raca VARCHAR(255) NOT NULL,
+    idade INTEGER,
+    sexo VARCHAR(50),
+    tamanho VARCHAR(50),
+    temperamento VARCHAR(50),
+    cor VARCHAR(100),
+    localizacao VARCHAR(255) NOT NULL,
+    status VARCHAR(50),
+    data_entrada TIMESTAMP,
+    data_saida TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS adocao_animais.fotos_animal (
+    id_animal BIGINT NOT NULL,
+    foto_url VARCHAR(500),
+    FOREIGN KEY (id_animal) REFERENCES adocao_animais.animal(id_animal)
+);
+
+CREATE TABLE IF NOT EXISTS adocao_animais.adotante (
+    id_adotante BIGSERIAL PRIMARY KEY,
+    uuid VARCHAR(255),
+    nome VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
+    senha VARCHAR(255),
+    role VARCHAR(50),
+    endereco VARCHAR(255),
+    experiencia_pets VARCHAR(255),
+    espaco_em_casa INTEGER,
+    tempo_disponivel INTEGER
+);
+
 INSERT INTO adocao_animais.animal (id_animal, nome, raca, idade, sexo, tamanho, temperamento, cor, localizacao, status, data_entrada) VALUES
 (1, 'Thor', 'Vira-lata', 3, 'Macho', 'Grande', 'ATIVO', 'Branco e Marrom', 'São Paulo, SP', 'DISPONIVEL', NOW()),
 (2, 'Luna', 'Golden Retriever', 2, 'Fêmea', 'Médio', 'SOCIÁVEL', 'Dourado', 'Rio de Janeiro, RJ', 'DISPONIVEL', NOW()),
