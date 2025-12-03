@@ -1,30 +1,30 @@
 import axios from 'axios';
 
-const API_BASE_URL = '';
-
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: '/api', 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+// Tipos
 export interface Animal {
   id: number;
   nome: string;
   raca: string;
   idade: number;
-  sexo: string;
+  porte?: string;
   tamanho: string;
   localizacao: string;
+  historia?: string;
   temperamento: string;
-  cor: string;
+  larIdeal?: string;
+  imagemUrl?: string;
+  fotos: string[];
+  disponivel?: boolean;
+  status: string;
   vacinasTomadas: string[];
   vacinasPendentes: string[];
-  fotos: string[];
-  dataEntrada: string;
-  dataSaida?: string;
-  status: string;
 }
 
 export interface MatchRequest {
@@ -37,18 +37,52 @@ export interface MatchResponse {
   success: boolean;
   animal?: Animal;
   matchScore?: number;
-  message?: string;
   iaReasoning?: string;
+  message?: string;
 }
 
-export const animalApi = {
-  getAll: () => api.get<Animal[]>('/api/animais'),
-  getById: (id: number) => api.get<Animal>(`/api/animais/${id}`),
-  create: (animal: Omit<Animal, 'id'>) => api.post<Animal>('/api/animais', animal),
+export interface LoginRequest {
+  email: string;
+  senha: string;
+}
+
+export interface RegisterRequest {
+  nome: string;
+  email: string;
+  senha: string;
+  endereco: string;
+  espacoEmCasa: number;
+  tempoDisponivel: number;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message?: string;
+  user?: any;
+}
+
+// APIs
+export const authApi = {
+  login: async (credentials: LoginRequest): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/auth/login', credentials);
+    return response.data;
+  },
+  register: async (data: RegisterRequest): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/auth/register', data);
+    return response.data;
+  },
 };
 
 export const matchApi = {
-  findMatch: (preferences: MatchRequest) => api.post<MatchResponse>('/api/match', preferences),
+  findMatch: async (data: MatchRequest): Promise<MatchResponse> => {
+    const response = await api.post<MatchResponse>('/match', data);
+    return response.data;
+  },
+};
+
+export const animalApi = {
+  getAll: () => api.get<Animal[]>('/animais'),
+  getById: (id: number) => api.get<Animal>(`/animais/${id}`),
 };
 
 export default api;

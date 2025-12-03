@@ -1,56 +1,16 @@
 import { Link } from "react-router-dom";
-import { Heart, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Heart } from "lucide-react";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { animalApi, Animal } from "@/services/api";
+import { mockAnimals } from "@/data/mockAnimals";
 import AnimalCard from "@/components/AnimalCard";
 import Button from "@/components/Button";
 
 const FavoritesPage = () => {
   const { favorites } = useFavorites();
-  const [favoriteAnimals, setFavoriteAnimals] = useState<Animal[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchFavoriteAnimals = async () => {
-
-      if (favorites.length === 0) {
-        setFavoriteAnimals([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-
-        const response = await animalApi.getAll();
-        const allAnimals = response.data;
-        
-        const filtered = allAnimals.filter((animal) => 
-          favorites.includes(animal.id)
-        );
-        
-        setFavoriteAnimals(filtered);
-      } catch (error) {
-        console.error("Erro ao carregar favoritos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFavoriteAnimals();
-  }, [favorites]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-2 text-primary">
-          <Loader2 className="w-8 h-8 animate-spin" />
-          <span>Carregando seus favoritos...</span>
-        </div>
-      </div>
-    );
-  }
+  const favoriteAnimals = mockAnimals.filter((animal) =>
+    favorites.includes(animal.id)
+  );
 
   return (
     <div className="min-h-screen pt-24 pb-16">

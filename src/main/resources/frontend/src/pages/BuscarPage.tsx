@@ -1,16 +1,9 @@
 import { useState, useMemo } from "react";
-import { animalApi, Animal } from "@/services/api";
-import { useEffect } from "react";
+import { mockAnimals } from "@/data/mockAnimals";
 import AnimalCard from "@/components/AnimalCard";
 import { Search } from "lucide-react";
 
 const BuscarPage = () => {
-  const [animalsList, setAnimalsList] = useState<Animal[]>([]);
-  
-  useEffect(() => {
-    animalApi.getAll().then(res => setAnimalsList(res.data)).catch(console.error);
-  }, []);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRace, setSelectedRace] = useState("todas");
   const [selectedSize, setSelectedSize] = useState("todos");
@@ -18,20 +11,20 @@ const BuscarPage = () => {
 
   // Extract unique values for filters
   const races = useMemo(() => {
-    const uniqueRaces = Array.from(new Set(animalsList.map(animal => animal.raça)));
+    const uniqueRaces = Array.from(new Set(mockAnimals.map(animal => animal.raça)));
     return ["todas", ...uniqueRaces];
   }, []);
 
   const sizes = ["todos", "Pequeno", "Médio", "Grande"];
   
   const locations = useMemo(() => {
-    const uniqueLocations = Array.from(new Set(animalsList.map(animal => animal.localizacao)));
+    const uniqueLocations = Array.from(new Set(mockAnimals.map(animal => animal.localizacao)));
     return ["todas", ...uniqueLocations];
   }, []);
 
   // Filter animals based on search and filters
   const filteredAnimals = useMemo(() => {
-    return animalsList.filter(animal => {
+    return mockAnimals.filter(animal => {
       const matchesSearch = animal.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            animal.raça.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRace = selectedRace === "todas" || animal.raça === selectedRace;

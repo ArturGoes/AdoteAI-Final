@@ -1,31 +1,10 @@
-import { useState, useEffect } from "react";
-import { Heart, PawPrint, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import AnimalCard from "@/components/AnimalCard";
 import Button from "@/components/Button";
-import { animalApi, Animal } from "@/services/api";
+import { mockAnimals } from "@/data/mockAnimals";
+import { Heart, PawPrint } from "lucide-react";
 
 const HomePage = () => {
-  const [animals, setAnimals] = useState<Animal[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        setLoading(true);
-
-        const response = await animalApi.getAll();
-        setAnimals(response.data);
-      } catch (err) {
-        console.error("Erro ao buscar animais:", err);
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnimals();
-  }, []);
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -57,15 +36,17 @@ const HomePage = () => {
               >
                 Ver Animais Disponíveis
               </Button>
-              <Button variant="secondary">
-                Saiba Mais
-              </Button>
+              <Link to="/sobre">
+                <Button variant="secondary">
+                  Saiba Mais
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Animais Section */}
+      {/* Animals Section */}
       <section id="animais-section" className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -76,31 +57,39 @@ const HomePage = () => {
               Amigos esperando por você
             </h2>
             <p className="text-lg text-gray-text max-w-2xl mx-auto">
-              Conheça os animais disponíveis para adoção.
+              Conheça os animais disponíveis para adoção. Cada um tem uma
+              história única e está pronto para fazer parte da sua família.
             </p>
           </div>
 
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12 text-primary">
-              <Loader2 className="w-8 h-8 animate-spin mb-2" />
-              <p>Carregando amigos...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {animals.length > 0 ? (
-                animals.map((animal) => (
-                  <AnimalCard key={animal.id} animal={animal} />
-                ))
-              ) : (
-                <div className="col-span-full text-center p-10 bg-gray-50 rounded-lg">
-                  <p className="text-xl text-gray-500">Nenhum animal cadastrado no banco de dados ainda.</p>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Dica: Execute o script <code>popular_banco.sql</code> no seu banco de dados.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {mockAnimals.map((animal) => (
+              <AnimalCard key={animal.id} animal={animal} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-gradient-to-r from-primary to-secondary py-16 mb-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            Pronto para mudar uma vida?
+          </h2>
+          <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
+            Adotar é um ato de amor. Dê a um animal a chance de ter um lar e
+            ganhe um companheiro fiel para toda a vida.
+          </p>
+          <Button
+            variant="accent"
+            onClick={() =>
+              document
+                .getElementById("animais-section")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            Comece sua jornada
+          </Button>
         </div>
       </section>
     </div>
