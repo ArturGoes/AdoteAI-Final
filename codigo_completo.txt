@@ -112,14 +112,11 @@
 
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\popular_banco.sql ---
--- 1. Criar Schema se não existir
 CREATE SCHEMA IF NOT EXISTS adocao_animais;
 
--- 2. Limpar dados antigos para garantir uma inserção limpa
 TRUNCATE TABLE adocao_animais.fotos_animal CASCADE;
 TRUNCATE TABLE adocao_animais.animal CASCADE;
 
--- 3. Inserir Animais com IDs Explícitos (Para garantir integridade com as fotos)
 INSERT INTO adocao_animais.animal (id_animal, nome, raca, idade, sexo, tamanho, temperamento, cor, localizacao, status, data_entrada) VALUES
 (1, 'Thor', 'Vira-lata', 3, 'Macho', 'Grande', 'ATIVO', 'Branco e Marrom', 'São Paulo, SP', 'DISPONIVEL', NOW()),
 (2, 'Luna', 'Golden Retriever', 2, 'Fêmea', 'Médio', 'SOCIÁVEL', 'Dourado', 'Rio de Janeiro, RJ', 'DISPONIVEL', NOW()),
@@ -132,7 +129,6 @@ INSERT INTO adocao_animais.animal (id_animal, nome, raca, idade, sexo, tamanho, 
 (9, 'Toby', 'Chihuahua', 1, 'Macho', 'Pequeno', 'ATIVO', 'Preto e Branco', 'Recife, PE', 'DISPONIVEL', NOW()),
 (10, 'Nina', 'Vira-lata', 3, 'Fêmea', 'Médio', 'SOCIÁVEL', 'Caramelo', 'Manaus, AM', 'ADOTADO', NOW());
 
--- 4. Inserir Fotos (Agora seguro, pois os IDs acima são fixos)
 INSERT INTO adocao_animais.fotos_animal (id_animal, foto_url) VALUES
 (1, 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80'),
 (2, 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=800&q=80'),
@@ -145,8 +141,6 @@ INSERT INTO adocao_animais.fotos_animal (id_animal, foto_url) VALUES
 (9, 'https://images.unsplash.com/photo-1477884213360-7e9d7dcc1e48?w=800&q=80'),
 (10, 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&q=80');
 
--- 5. Atualizar a sequência do ID para evitar erros ao inserir novos animais via aplicação
--- (O nome da sequência geralmente segue o padrão: nome_tabela_nome_coluna_seq)
 SELECT setval('adocao_animais.animal_id_animal_seq', (SELECT MAX(id_animal) FROM adocao_animais.animal));
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\popular_banco.sql ---
 
@@ -1174,8 +1168,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/**").permitAll() // Allow all API endpoints for now
-                .anyRequest().permitAll() // Allow all other requests for dev
+                .requestMatchers("/api/**").permitAll()
+                .anyRequest().permitAll()
             );
 
         return http.build();
@@ -1184,7 +1178,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173")); // React dev server
+        
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:5173", 
+            "http://localhost:5174", 
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174"
+        ));
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -1199,7 +1200,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\SecurityConfig.java ---
 
 
@@ -1843,10 +1843,8 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(animal.id);
 
-  // LÓGICA: Verifica o status baseado no Enum do Java (String)
   const isDisponivel = animal.status === "DISPONIVEL";
 
-  // LÓGICA: Pega a primeira foto do array ou usa um placeholder
   const imageUrl = animal.fotos && animal.fotos.length > 0 
     ? animal.fotos[0] 
     : "https://via.placeholder.com/400x400?text=Sem+Foto";
@@ -6552,7 +6550,14 @@ interface AnimalCardProps {
 const AnimalCard = ({ animal }: AnimalCardProps) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(animal.id);
+
+  // LÓGICA: Verifica o status baseado no Enum do Java (String)
   const isDisponivel = animal.status === "DISPONIVEL";
+
+  // LÓGICA: Pega a primeira foto do array ou usa um placeholder se estiver vazio
+  const imageUrl = animal.fotos && animal.fotos.length > 0 
+    ? animal.fotos[0] 
+    : "https://via.placeholder.com/400x400?text=Sem+Foto";
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -6607,8 +6612,8 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
       {/* Image */}
       <div className="aspect-square overflow-hidden">
         <img
-          src={animal.fotos && animal.fotos.length > 0 ? animal.fotos[0] : "https://via.placeholder.com/400x400?text=Sem+Foto"}
-          alt={`${animal.raca} - ${animal.idade} anos`}
+          src={imageUrl}
+          alt={animal.nome}
           className={cn(
             "w-full h-full object-cover transition-transform duration-300",
             isDisponivel && "group-hover:scale-110"
@@ -6619,12 +6624,15 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
       {/* Content */}
       <div className="p-4">
         <h3 className="text-xl font-bold text-card-foreground mb-1">
-          {animal.raca} - {animal.idade} anos
+          {animal.nome}
         </h3>
-        <p className="text-muted-foreground text-sm mb-2">{animal.tamanho} • {animal.sexo}</p>
+        {/* CORREÇÃO: Usando 'raca' (sem cedilha) conforme api.ts */}
+        <p className="text-muted-foreground text-sm mb-2">
+          {animal.raca} • {animal.idade} anos
+        </p>
         <div className="flex items-center gap-1 text-gray-text text-sm">
           <MapPin className="w-4 h-4" />
-          <span>{animal.cor} • {animal.temperamento}</span>
+          <span>{animal.localizacao}</span>
         </div>
       </div>
     </div>
@@ -6642,7 +6650,6 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
 };
 
 export default AnimalCard;
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\components\AnimalCard.tsx ---
 
 
@@ -6687,10 +6694,9 @@ export default Button;
 
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\components\Chatbot.tsx ---
-import { useState } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { matchApi, MatchRequest, MatchResponse } from "@/services/api";
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -6701,6 +6707,42 @@ const Chatbot = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isOpen]);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { text: input, sender: "user" };
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
+    setInput("");
+    setIsLoading(true);
+
+    setTimeout(() => {
+      let botResponse = "Entendi! Estamos buscando o melhor amigo para você.";
+
+      if (currentInput.toLowerCase().includes("cachorro")) {
+        botResponse = "Temos muitos cachorros adoráveis! Você prefere porte pequeno, médio ou grande?";
+      } else if (currentInput.toLowerCase().includes("gato")) {
+        botResponse = "Gatos são ótimos companheiros! Você prefere um mais calmo ou brincalhão?";
+      } else if (currentInput.toLowerCase().includes("adotar")) {
+        botResponse = "Para adotar, clique no animal que você gostou e veja os detalhes!";
+      }
+
+      setMessages((prev) => [...prev, { text: botResponse, sender: "bot" }]);
+      setIsLoading(false);
+    }, 1500);
+  };
+  // ---------------------------
+ 
   return (
     <>
       {/* FAB Button */}
@@ -6717,12 +6759,12 @@ const Chatbot = () => {
       {/* Chat Window */}
       <div
         className={cn(
-          "fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-card rounded-2xl shadow-2xl transition-all duration-300",
-          isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0"
+          "fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-card rounded-2xl shadow-2xl transition-all duration-300 flex flex-col overflow-hidden border border-border",
+          isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
         )}
       >
         {/* Header */}
-        <div className="bg-primary text-primary-foreground p-4 rounded-t-2xl flex items-center justify-between">
+        <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
               <MessageCircle className="w-5 h-5" />
@@ -6741,39 +6783,40 @@ const Chatbot = () => {
         </div>
 
         {/* Chat Content */}
-        <div className="h-96 p-4 overflow-y-auto bg-muted/30">
-          <div className="flex flex-col gap-3">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "rounded-lg p-3 max-w-[80%]",
-                  message.sender === "bot"
-                    ? "bg-primary/10 self-start"
-                    : "bg-accent text-accent-foreground self-end ml-auto"
-                )}
-              >
-                <p className="text-sm">{message.text}</p>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="bg-primary/10 rounded-lg p-3 max-w-[80%] self-start">
-                <p className="text-sm">Pensando...</p>
-              </div>
-            )}
-          </div>
+        <div className="h-96 p-4 overflow-y-auto bg-muted/30 flex flex-col gap-3">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={cn(
+                "rounded-lg p-3 max-w-[80%] text-sm",
+                message.sender === "bot"
+                  ? "bg-white border border-border self-start text-foreground shadow-sm"
+                  : "bg-primary text-primary-foreground self-end ml-auto shadow-sm"
+              )}
+            >
+              <p>{message.text}</p>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="bg-white border border-border rounded-lg p-3 max-w-[80%] self-start shadow-sm flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground">Digitando...</span>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border bg-background">
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Digite suas preferências (ex: espaço, tempo, temperamento)..."
+              placeholder="Digite sua mensagem..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1 px-4 py-2 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
             />
             <button
               onClick={handleSend}
@@ -6790,7 +6833,6 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\components\Chatbot.tsx ---
 
 
@@ -11551,7 +11593,7 @@ export function cn(...inputs: ClassValue[]) {
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\AnimalProfilePage.tsx ---
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Heart, Home, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Home, Check, Loader2 } from "lucide-react";
 import { animalApi, Animal } from "@/services/api";
 import Button from "@/components/Button";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -11568,6 +11610,7 @@ const AnimalProfilePage = () => {
       if (!id) return;
 
       try {
+        setLoading(true);
         const response = await animalApi.getById(Number(id));
         setAnimal(response.data);
       } catch (err) {
@@ -11584,10 +11627,9 @@ const AnimalProfilePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-dark-text mb-4">
-            Carregando...
-          </h1>
+        <div className="flex flex-col items-center gap-2 text-primary">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span className="text-2xl font-bold text-dark-text">Carregando...</span>
         </div>
       </div>
     );
@@ -11612,7 +11654,13 @@ const AnimalProfilePage = () => {
   }
 
   const favorite = isFavorite(animal.id);
+  // LÓGICA: Verifica o status baseado no Enum do Java (String)
   const isDisponivel = animal.status === "DISPONIVEL";
+
+  // LÓGICA: Pega a primeira foto do array ou usa um placeholder
+  const imageUrl = animal.fotos && animal.fotos.length > 0 
+    ? animal.fotos[0] 
+    : "https://via.placeholder.com/600x600?text=Sem+Foto";
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -11631,7 +11679,7 @@ const AnimalProfilePage = () => {
           <div className="relative">
             <div className="aspect-square rounded-2xl overflow-hidden shadow-xl">
               <img
-                src={animal.fotos && animal.fotos.length > 0 ? animal.fotos[0] : "https://via.placeholder.com/600x600?text=Sem+Foto"}
+                src={imageUrl}
                 alt={`${animal.raca} - ${animal.idade} anos`}
                 className="w-full h-full object-cover"
               />
@@ -11681,6 +11729,10 @@ const AnimalProfilePage = () => {
             {/* Info Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-card p-4 rounded-lg border border-border">
+                <div className="text-sm text-gray-text mb-1">Nome</div>
+                <div className="font-semibold text-dark-text">{animal.nome}</div>
+              </div>
+              <div className="bg-card p-4 rounded-lg border border-border">
                 <div className="text-sm text-gray-text mb-1">Raça</div>
                 <div className="font-semibold text-dark-text">{animal.raca}</div>
               </div>
@@ -11695,6 +11747,10 @@ const AnimalProfilePage = () => {
               <div className="bg-card p-4 rounded-lg border border-border">
                 <div className="text-sm text-gray-text mb-1">Sexo</div>
                 <div className="font-semibold text-dark-text">{animal.sexo}</div>
+              </div>
+              <div className="bg-card p-4 rounded-lg border border-border">
+                <div className="text-sm text-gray-text mb-1">Localização</div>
+                <div className="font-semibold text-dark-text">{animal.localizacao}</div>
               </div>
             </div>
 
@@ -11736,6 +11792,7 @@ const AnimalProfilePage = () => {
               variant="primary"
               disabled={!isDisponivel}
               className="w-full text-lg py-4"
+              onClick={() => alert('Funcionalidade de adoção em breve!')}
             >
               {isDisponivel ? "Quero Adotar!" : "Já encontrou um lar!"}
             </Button>
@@ -11753,7 +11810,6 @@ const AnimalProfilePage = () => {
 };
 
 export default AnimalProfilePage;
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\AnimalProfilePage.tsx ---
 
 
@@ -11928,7 +11984,7 @@ export default BuscarPage;
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\FavoritesPage.tsx ---
 import { Link } from "react-router-dom";
-import { Heart, Loader2 } from "lucide-react"; // Adicionei Loader2 para loading state
+import { Heart, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { animalApi, Animal } from "@/services/api";
@@ -11942,7 +11998,7 @@ const FavoritesPage = () => {
 
   useEffect(() => {
     const fetchFavoriteAnimals = async () => {
-      // Se não houver IDs favoritos, não precisamos chamar a API
+
       if (favorites.length === 0) {
         setFavoriteAnimals([]);
         setLoading(false);
@@ -11951,12 +12007,10 @@ const FavoritesPage = () => {
 
       try {
         setLoading(true);
-        // Estratégia: Buscamos todos os animais e filtramos no front.
-        // (Idealmente, o backend teria um endpoint /api/animais?ids=1,2,3)
+
         const response = await animalApi.getAll();
         const allAnimals = response.data;
         
-        // Filtra apenas os animais que estão na lista de IDs favoritos
         const filtered = allAnimals.filter((animal) => 
           favorites.includes(animal.id)
         );
@@ -12036,27 +12090,26 @@ export default FavoritesPage;
 
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\HomePage.tsx ---
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Heart, PawPrint, Loader2 } from "lucide-react";
 import AnimalCard from "@/components/AnimalCard";
 import Button from "@/components/Button";
 import { animalApi, Animal } from "@/services/api";
-import { Heart, PawPrint } from "lucide-react";
 
 const HomePage = () => {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
-        // Busca dados reais do Backend
+        setLoading(true);
+
         const response = await animalApi.getAll();
         setAnimals(response.data);
       } catch (err) {
         console.error("Erro ao buscar animais:", err);
-        // Não trava a tela, apenas mostra erro no console
+
       } finally {
         setLoading(false);
       }
@@ -12120,8 +12173,9 @@ const HomePage = () => {
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-text">Carregando amigos...</p>
+            <div className="flex flex-col items-center justify-center py-12 text-primary">
+              <Loader2 className="w-8 h-8 animate-spin mb-2" />
+              <p>Carregando amigos...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -12132,7 +12186,9 @@ const HomePage = () => {
               ) : (
                 <div className="col-span-full text-center p-10 bg-gray-50 rounded-lg">
                   <p className="text-xl text-gray-500">Nenhum animal cadastrado no banco de dados ainda.</p>
-                  <p className="text-sm text-gray-400 mt-2">Use o Postman ou SQL para inserir dados na tabela 'animal'.</p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Dica: Execute o script <code>popular_banco.sql</code> no seu banco de dados.
+                  </p>
                 </div>
               )}
             </div>
