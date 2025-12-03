@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart, Loader2 } from "lucide-react"; // Adicionei Loader2 para loading state
+import { Heart, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { animalApi, Animal } from "@/services/api";
@@ -13,7 +13,7 @@ const FavoritesPage = () => {
 
   useEffect(() => {
     const fetchFavoriteAnimals = async () => {
-      // Se não houver IDs favoritos, não precisamos chamar a API
+
       if (favorites.length === 0) {
         setFavoriteAnimals([]);
         setLoading(false);
@@ -22,12 +22,10 @@ const FavoritesPage = () => {
 
       try {
         setLoading(true);
-        // Estratégia: Buscamos todos os animais e filtramos no front.
-        // (Idealmente, o backend teria um endpoint /api/animais?ids=1,2,3)
+
         const response = await animalApi.getAll();
         const allAnimals = response.data;
         
-        // Filtra apenas os animais que estão na lista de IDs favoritos
         const filtered = allAnimals.filter((animal) => 
           favorites.includes(animal.id)
         );

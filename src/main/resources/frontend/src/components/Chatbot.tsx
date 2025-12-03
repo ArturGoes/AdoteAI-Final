@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { matchApi, MatchRequest, MatchResponse } from "@/services/api";
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +10,42 @@ const Chatbot = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isOpen]);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { text: input, sender: "user" };
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
+    setInput("");
+    setIsLoading(true);
+
+    setTimeout(() => {
+      let botResponse = "Entendi! Estamos buscando o melhor amigo para você.";
+
+      if (currentInput.toLowerCase().includes("cachorro")) {
+        botResponse = "Temos muitos cachorros adoráveis! Você prefere porte pequeno, médio ou grande?";
+      } else if (currentInput.toLowerCase().includes("gato")) {
+        botResponse = "Gatos são ótimos companheiros! Você prefere um mais calmo ou brincalhão?";
+      } else if (currentInput.toLowerCase().includes("adotar")) {
+        botResponse = "Para adotar, clique no animal que você gostou e veja os detalhes!";
+      }
+
+      setMessages((prev) => [...prev, { text: botResponse, sender: "bot" }]);
+      setIsLoading(false);
+    }, 1500);
+  };
+  // ---------------------------
 
   return (
     <>
@@ -28,12 +63,12 @@ const Chatbot = () => {
       {/* Chat Window */}
       <div
         className={cn(
-          "fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-card rounded-2xl shadow-2xl transition-all duration-300",
-          isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0"
+          "fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-card rounded-2xl shadow-2xl transition-all duration-300 flex flex-col overflow-hidden border border-border",
+          isOpen ? "scale-100 opacity-100" : "scale-0 opacity-0 pointer-events-none"
         )}
       >
         {/* Header */}
-        <div className="bg-primary text-primary-foreground p-4 rounded-t-2xl flex items-center justify-between">
+        <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
               <MessageCircle className="w-5 h-5" />
@@ -52,39 +87,40 @@ const Chatbot = () => {
         </div>
 
         {/* Chat Content */}
-        <div className="h-96 p-4 overflow-y-auto bg-muted/30">
-          <div className="flex flex-col gap-3">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "rounded-lg p-3 max-w-[80%]",
-                  message.sender === "bot"
-                    ? "bg-primary/10 self-start"
-                    : "bg-accent text-accent-foreground self-end ml-auto"
-                )}
-              >
-                <p className="text-sm">{message.text}</p>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="bg-primary/10 rounded-lg p-3 max-w-[80%] self-start">
-                <p className="text-sm">Pensando...</p>
-              </div>
-            )}
-          </div>
+        <div className="h-96 p-4 overflow-y-auto bg-muted/30 flex flex-col gap-3">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={cn(
+                "rounded-lg p-3 max-w-[80%] text-sm",
+                message.sender === "bot"
+                  ? "bg-white border border-border self-start text-foreground shadow-sm"
+                  : "bg-primary text-primary-foreground self-end ml-auto shadow-sm"
+              )}
+            >
+              <p>{message.text}</p>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="bg-white border border-border rounded-lg p-3 max-w-[80%] self-start shadow-sm flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground">Digitando...</span>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border bg-background">
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Digite suas preferências (ex: espaço, tempo, temperamento)..."
+              placeholder="Digite sua mensagem..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1 px-4 py-2 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
             />
             <button
               onClick={handleSend}

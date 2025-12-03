@@ -11,7 +11,14 @@ interface AnimalCardProps {
 const AnimalCard = ({ animal }: AnimalCardProps) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(animal.id);
+
+  // LÓGICA: Verifica o status baseado no Enum do Java (String)
   const isDisponivel = animal.status === "DISPONIVEL";
+
+  // LÓGICA: Pega a primeira foto do array ou usa um placeholder se estiver vazio
+  const imageUrl = animal.fotos && animal.fotos.length > 0 
+    ? animal.fotos[0] 
+    : "https://via.placeholder.com/400x400?text=Sem+Foto";
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -66,8 +73,8 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
       {/* Image */}
       <div className="aspect-square overflow-hidden">
         <img
-          src={animal.fotos && animal.fotos.length > 0 ? animal.fotos[0] : "https://via.placeholder.com/400x400?text=Sem+Foto"}
-          alt={`${animal.raca} - ${animal.idade} anos`}
+          src={imageUrl}
+          alt={animal.nome}
           className={cn(
             "w-full h-full object-cover transition-transform duration-300",
             isDisponivel && "group-hover:scale-110"
@@ -78,12 +85,15 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
       {/* Content */}
       <div className="p-4">
         <h3 className="text-xl font-bold text-card-foreground mb-1">
-          {animal.raca} - {animal.idade} anos
+          {animal.nome}
         </h3>
-        <p className="text-muted-foreground text-sm mb-2">{animal.tamanho} • {animal.sexo}</p>
+        {/* CORREÇÃO: Usando 'raca' (sem cedilha) conforme api.ts */}
+        <p className="text-muted-foreground text-sm mb-2">
+          {animal.raca} • {animal.idade} anos
+        </p>
         <div className="flex items-center gap-1 text-gray-text text-sm">
           <MapPin className="w-4 h-4" />
-          <span>{animal.cor} • {animal.temperamento}</span>
+          <span>{animal.localizacao}</span>
         </div>
       </div>
     </div>

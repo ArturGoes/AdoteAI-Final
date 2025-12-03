@@ -12,10 +12,8 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(animal.id);
 
-  // LÓGICA: Verifica o status baseado no Enum do Java (String)
   const isDisponivel = animal.status === "DISPONIVEL";
 
-  // LÓGICA: Pega a primeira foto do array ou usa um placeholder
   const imageUrl = animal.fotos && animal.fotos.length > 0 
     ? animal.fotos[0] 
     : "https://via.placeholder.com/400x400?text=Sem+Foto";

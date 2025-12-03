@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Heart, Home, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Home, Check, Loader2 } from "lucide-react";
 import { animalApi, Animal } from "@/services/api";
 import Button from "@/components/Button";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -17,6 +17,7 @@ const AnimalProfilePage = () => {
       if (!id) return;
 
       try {
+        setLoading(true);
         const response = await animalApi.getById(Number(id));
         setAnimal(response.data);
       } catch (err) {
@@ -33,10 +34,9 @@ const AnimalProfilePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-dark-text mb-4">
-            Carregando...
-          </h1>
+        <div className="flex flex-col items-center gap-2 text-primary">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span className="text-2xl font-bold text-dark-text">Carregando...</span>
         </div>
       </div>
     );
@@ -61,7 +61,13 @@ const AnimalProfilePage = () => {
   }
 
   const favorite = isFavorite(animal.id);
+  // LÓGICA: Verifica o status baseado no Enum do Java (String)
   const isDisponivel = animal.status === "DISPONIVEL";
+
+  // LÓGICA: Pega a primeira foto do array ou usa um placeholder
+  const imageUrl = animal.fotos && animal.fotos.length > 0 
+    ? animal.fotos[0] 
+    : "https://via.placeholder.com/600x600?text=Sem+Foto";
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -80,7 +86,7 @@ const AnimalProfilePage = () => {
           <div className="relative">
             <div className="aspect-square rounded-2xl overflow-hidden shadow-xl">
               <img
-                src={animal.fotos && animal.fotos.length > 0 ? animal.fotos[0] : "https://via.placeholder.com/600x600?text=Sem+Foto"}
+                src={imageUrl}
                 alt={`${animal.raca} - ${animal.idade} anos`}
                 className="w-full h-full object-cover"
               />
@@ -130,6 +136,10 @@ const AnimalProfilePage = () => {
             {/* Info Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-card p-4 rounded-lg border border-border">
+                <div className="text-sm text-gray-text mb-1">Nome</div>
+                <div className="font-semibold text-dark-text">{animal.nome}</div>
+              </div>
+              <div className="bg-card p-4 rounded-lg border border-border">
                 <div className="text-sm text-gray-text mb-1">Raça</div>
                 <div className="font-semibold text-dark-text">{animal.raca}</div>
               </div>
@@ -144,6 +154,10 @@ const AnimalProfilePage = () => {
               <div className="bg-card p-4 rounded-lg border border-border">
                 <div className="text-sm text-gray-text mb-1">Sexo</div>
                 <div className="font-semibold text-dark-text">{animal.sexo}</div>
+              </div>
+              <div className="bg-card p-4 rounded-lg border border-border">
+                <div className="text-sm text-gray-text mb-1">Localização</div>
+                <div className="font-semibold text-dark-text">{animal.localizacao}</div>
               </div>
             </div>
 
@@ -185,6 +199,7 @@ const AnimalProfilePage = () => {
               variant="primary"
               disabled={!isDisponivel}
               className="w-full text-lg py-4"
+              onClick={() => alert('Funcionalidade de adoção em breve!')}
             >
               {isDisponivel ? "Quero Adotar!" : "Já encontrou um lar!"}
             </Button>

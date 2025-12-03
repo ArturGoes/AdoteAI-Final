@@ -1,24 +1,23 @@
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Heart, PawPrint, Loader2 } from "lucide-react";
 import AnimalCard from "@/components/AnimalCard";
 import Button from "@/components/Button";
 import { animalApi, Animal } from "@/services/api";
-import { Heart, PawPrint } from "lucide-react";
 
 const HomePage = () => {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
-        // Busca dados reais do Backend
+        setLoading(true);
+
         const response = await animalApi.getAll();
         setAnimals(response.data);
       } catch (err) {
         console.error("Erro ao buscar animais:", err);
-        // Não trava a tela, apenas mostra erro no console
+
       } finally {
         setLoading(false);
       }
@@ -82,8 +81,9 @@ const HomePage = () => {
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-text">Carregando amigos...</p>
+            <div className="flex flex-col items-center justify-center py-12 text-primary">
+              <Loader2 className="w-8 h-8 animate-spin mb-2" />
+              <p>Carregando amigos...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -94,7 +94,9 @@ const HomePage = () => {
               ) : (
                 <div className="col-span-full text-center p-10 bg-gray-50 rounded-lg">
                   <p className="text-xl text-gray-500">Nenhum animal cadastrado no banco de dados ainda.</p>
-                  <p className="text-sm text-gray-400 mt-2">Use o Postman ou SQL para inserir dados na tabela 'animal'.</p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Dica: Execute o script <code>popular_banco.sql</code> no seu banco de dados.
+                  </p>
                 </div>
               )}
             </div>

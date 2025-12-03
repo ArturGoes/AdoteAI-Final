@@ -23,8 +23,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/**").permitAll() // Allow all API endpoints for now
-                .anyRequest().permitAll() // Allow all other requests for dev
+                .requestMatchers("/api/**").permitAll()
+                .anyRequest().permitAll()
             );
 
         return http.build();
@@ -33,7 +33,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173")); // React dev server
+        
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:5173", 
+            "http://localhost:5174", 
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174"
+        ));
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
