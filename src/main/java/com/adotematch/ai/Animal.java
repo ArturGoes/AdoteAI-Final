@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "animal", schema = "adocao_animais")
@@ -22,7 +22,7 @@ public class Animal {
     private Long id;
 
     @Column(nullable = false)
-    private String nome; // Adicionado para o Frontend
+    private String nome;
 
     @Column(nullable = false)
     private String raca;
@@ -32,7 +32,7 @@ public class Animal {
     private String tamanho;
     
     @Column(nullable = false)
-    private String localizacao; // Adicionado para o Frontend
+    private String localizacao;
 
     @Enumerated(EnumType.STRING)
     private Temperamento temperamento;
@@ -40,19 +40,19 @@ public class Animal {
     private String cor;
 
     @ElementCollection
-    @CollectionTable(name = "vacinas_tomadas", joinColumns = @JoinColumn(name = "id_animal"))
+    @CollectionTable(name = "vacinas_tomadas", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "vacina")
-    private List<String> vacinasTomadas = new ArrayList<>();
+    private Set<String> vacinasTomadas = new HashSet<>();
 
     @ElementCollection
-    @CollectionTable(name = "vacinas_pendentes", joinColumns = @JoinColumn(name = "id_animal"))
+    @CollectionTable(name = "vacinas_pendentes", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "vacina")
-    private List<String> vacinasPendentes = new ArrayList<>();
+    private Set<String> vacinasPendentes = new HashSet<>();
 
     @ElementCollection
-    @CollectionTable(name = "fotos_animal", joinColumns = @JoinColumn(name = "id_animal"))
+    @CollectionTable(name = "fotos_animal", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "foto_url")
-    private List<String> fotos = new ArrayList<>();
+    private Set<String> fotos = new HashSet<>();
 
     @Column(name = "data_entrada")
     @Temporal(TemporalType.TIMESTAMP)
@@ -65,10 +65,9 @@ public class Animal {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    public enum Temperamento { CALMO, ATIVO, TIMIDO, SOCIÁVEL }
+    public enum Temperamento { CALMO, ATIVO, TIMIDO, SOCIAVEL }
     public enum Status { DISPONIVEL, ADOTADO, TRANSFERIDO }
 
-    // Métodos auxiliares
     public void adicionarVacinaTomada(String vacina) { vacinasTomadas.add(vacina); }
     public void adicionarVacinaPendente(String vacina) { vacinasPendentes.add(vacina); }
     public void adicionarFoto(String fotoUrl) { fotos.add(fotoUrl); }

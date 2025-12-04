@@ -117,6 +117,10 @@ CREATE SCHEMA IF NOT EXISTS adocao_animais;
 TRUNCATE TABLE adocao_animais.fotos_animal CASCADE;
 TRUNCATE TABLE adocao_animais.animal CASCADE;
 
+DROP TABLE IF EXISTS adocao_animais.vacinas_tomadas CASCADE;
+DROP TABLE IF EXISTS adocao_animais.vacinas_pendentes CASCADE;
+
+
 CREATE TABLE IF NOT EXISTS adocao_animais.animal (
     id_animal BIGSERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
@@ -151,29 +155,101 @@ CREATE TABLE IF NOT EXISTS adocao_animais.adotante (
     tempo_disponivel INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS adocao_animais.vacinas_tomadas (
+    id_animal BIGINT NOT NULL,
+    vacina VARCHAR(255),
+    FOREIGN KEY (id_animal) REFERENCES adocao_animais.animal(id_animal)
+);
+
+CREATE TABLE IF NOT EXISTS adocao_animais.vacinas_pendentes (
+    id_animal BIGINT NOT NULL,
+    vacina VARCHAR(255),
+    FOREIGN KEY (id_animal) REFERENCES adocao_animais.animal(id_animal)
+);
+
 INSERT INTO adocao_animais.animal (id_animal, nome, raca, idade, sexo, tamanho, temperamento, cor, localizacao, status, data_entrada) VALUES
 (1, 'Thor', 'Vira-lata', 3, 'Macho', 'Grande', 'ATIVO', 'Branco e Marrom', 'São Paulo, SP', 'DISPONIVEL', NOW()),
-(2, 'Luna', 'Golden Retriever', 2, 'Fêmea', 'Médio', 'SOCIÁVEL', 'Dourado', 'Rio de Janeiro, RJ', 'DISPONIVEL', NOW()),
+(2, 'Luna', 'Golden Retriever', 2, 'Fêmea', 'Médio', 'SOCIAVEL', 'Dourado', 'Rio de Janeiro, RJ', 'DISPONIVEL', NOW()),
 (3, 'Max', 'Pastor Alemão', 4, 'Macho', 'Grande', 'ATIVO', 'Preto e Capa', 'Belo Horizonte, MG', 'DISPONIVEL', NOW()),
-(4, 'Mel', 'Poodle', 1, 'Fêmea', 'Pequeno', 'SOCIÁVEL', 'Branco', 'Curitiba, PR', 'DISPONIVEL', NOW()),
+(4, 'Mel', 'Poodle', 1, 'Fêmea', 'Pequeno', 'SOCIAVEL', 'Branco', 'Curitiba, PR', 'DISPONIVEL', NOW()),
 (5, 'Rocky', 'Bulldog', 5, 'Macho', 'Médio', 'CALMO', 'Branco', 'Porto Alegre, RS', 'ADOTADO', NOW()),
 (6, 'Bella', 'Beagle', 3, 'Fêmea', 'Médio', 'ATIVO', 'Tricolor', 'Salvador, BA', 'DISPONIVEL', NOW()),
 (7, 'Zeus', 'Husky Siberiano', 2, 'Macho', 'Grande', 'ATIVO', 'Cinza e Branco', 'Brasília, DF', 'DISPONIVEL', NOW()),
 (8, 'Mimi', 'Gato Persa', 4, 'Fêmea', 'Pequeno', 'CALMO', 'Branco', 'Fortaleza, CE', 'DISPONIVEL', NOW()),
 (9, 'Toby', 'Chihuahua', 1, 'Macho', 'Pequeno', 'ATIVO', 'Preto e Branco', 'Recife, PE', 'DISPONIVEL', NOW()),
-(10, 'Nina', 'Vira-lata', 3, 'Fêmea', 'Médio', 'SOCIÁVEL', 'Caramelo', 'Manaus, AM', 'ADOTADO', NOW());
+(10, 'Nina', 'Vira-lata', 3, 'Fêmea', 'Médio', 'SOCIAVEL', 'Caramelo', 'Manaus, AM', 'ADOTADO', NOW());
 
 INSERT INTO adocao_animais.fotos_animal (id_animal, foto_url) VALUES
+-- Thor (ID 1 - Vira-lata grande, branco e marrom)
 (1, 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80'),
-(2, 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=800&q=80'),
+(1, 'https://images.unsplash.com/photo-1548681528-6a5c45b66b42?w=800&q=80'),
+(1, 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&q=80'),
+(1, 'https://images.unsplash.com/photo-1594149929911-734ab7a8a126?w=800&q=80'),
+
+-- Luna (ID 2 - Golden Retriever)
+(2, 'https://images.unsplash.com/photo-1611250186439-d84348596f2c?w=800&q=80'),
+(2, 'https://images.unsplash.com/photo-1522276498395-f4f68f7f8454?w=800&q=80'),
+(2, 'https://images.unsplash.com/photo-1599421493639-67041852b71f?w=800&q=80'),
+(2, 'https://images.unsplash.com/photo-1622419956410-a43477839353?w=800&q=80'),
+
+-- Max (ID 3 - Pastor Alemão)
 (3, 'https://images.unsplash.com/photo-1568572933382-74d440642117?w=800&q=80'),
+(3, 'https://images.unsplash.com/photo-1631758257257-22774a3507d6?w=800&q=80'),
+(3, 'https://images.unsplash.com/photo-1552694432-33dd5374a44b?w=800&q=80'),
+(3, 'https://images.unsplash.com/photo-1543486337-526848259468?w=800&q=80'),
+
+-- Mel (ID 4 - Poodle branco)
+(4, 'https://images.unsplash.com/photo-1587764379873-9781a942a27a?w=800&q=80'),
+(4, 'https://images.unsplash.com/photo-1567172352136-a36c9be1352e?w=800&q=80'),
+(4, 'https://images.unsplash.com/photo-1615233515250-13f56a59633e?w=800&q=80'),
 (4, 'https://images.unsplash.com/photo-1546527868-ccb7ee7dfa6a?w=800&q=80'),
+
+-- Rocky (ID 5 - Bulldog branco)
+(5, 'https://images.unsplash.com/photo-1535930891776-0c2dfb7dea1d?w=800&q=80'),
 (5, 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&q=80'),
-(6, 'https://images.unsplash.com/photo-1505628346881-b72b27e84530?w=800&q=80'),
-(7, 'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?w=800&q=80'),
+(5, 'https://images.unsplash.com/photo-1605463322588-348b3b3a215c?w=800&q=80'),
+(5, 'https://images.unsplash.com/photo-1583337130587-5161f28b43f3?w=800&q=80'),
+
+-- Bella (ID 6 - Beagle)
+(6, 'https://images.unsplash.com/photo-1558280335-5433d3d52316?w=800&q=80'),
+(6, 'https://images.unsplash.com/photo-1607932976214-8237580210aa?w=800&q=80'),
+(6, 'https://images.unsplash.com/photo-1579482453880-07b1d5c07e0c?w=800&q=80'),
+(6, 'https://images.unsplash.com/photo-1598813102324-a26130934149?w=800&q=80'),
+
+-- Zeus (ID 7 - Husky Siberiano)
+(7, 'https://images.unsplash.com/photo-1598875128779-2798036214d2?w=800&q=80'),
+(7, 'https://images.unsplash.com/photo-1605562241513-e6a690e0b094?w=800&q=80'),
+(7, 'https://images.unsplash.com/photo-1600804340584-c7db2eacf0e4?w=800&q=80'),
+(7, 'https://images.unsplash.com/photo-1552129035-26a94833c82e?w=800&q=80'),
+
+-- Mimi (ID 8 - Gato Persa branco)
 (8, 'https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=800&q=80'),
-(9, 'https://images.unsplash.com/photo-1477884213360-7e9d7dcc1e48?w=800&q=80'),
-(10, 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&q=80');
+(8, 'https://images.unsplash.com/photo-1574158622682-e40e6984100d?w=800&q=80'),
+(8, 'https://images.unsplash.com/photo-1615789591457-74a63395c990?w=800&q=80'),
+(8, 'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=800&q=80'),
+
+-- Toby (ID 9 - Chihuahua preto e branco)
+(9, 'https://images.unsplash.com/photo-1605722927357-a3f1b4c6a469?w=800&q=80'),
+(9, 'https://images.unsplash.com/photo-1505628346881-b72b27e84530?w=800&q=80'),
+(9, 'https://images.unsplash.com/photo-1616013653284-a1548e23924f?w=800&q=80'),
+(9, 'https://images.unsplash.com/photo-1600804340584-c7db2eacf0e4?w=800&q=80'),
+
+-- Nina (ID 10 - Vira-lata caramelo)
+(10, 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=800&q=80'),
+(10, 'https://images.unsplash.com/photo-1544568100-847a948585b9?w=800&q=80'),
+(10, 'https://images.unsplash.com/photo-1585675100433-f728857a2c27?w=800&q=80'),
+(10, 'https://images.unsplash.com/photo-1534351450186-e5d801427b2b?w=800&q=80');
+
+INSERT INTO adocao_animais.vacinas_tomadas (id_animal, vacina) VALUES
+(1, 'Raiva'),
+(1, 'V10'),
+(2, 'V10'),
+(3, 'Raiva');
+
+INSERT INTO adocao_animais.vacinas_pendentes (id_animal, vacina) VALUES
+(2, 'Raiva'),
+(3, 'Leishmaniose');
+
 
 SELECT setval('adocao_animais.animal_id_animal_seq', (SELECT MAX(id_animal) FROM adocao_animais.animal));
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\popular_banco.sql ---
@@ -490,10 +566,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/match")
@@ -509,42 +586,46 @@ public class AIController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-
             double space = Double.parseDouble(preferences.get("espacoEmCasa").toString());
             double time = Double.parseDouble(preferences.get("tempoDisponivel").toString());
             int prefTemper = Integer.parseInt(preferences.get("preferenciaTemperamento").toString());
 
-            Case newCase = new Case(space, time, prefTemper, 0, 0, 0, 0);
+            int simplifiedPrefTemper = (prefTemper == 1 || prefTemper == 3) ? 1 : 0;
+
+            Case newCase = new Case(space, time, simplifiedPrefTemper, 0, 0, 0, 0);
             Case similar = rbc.retrieveSimilarCase(newCase);
 
             String tamanhoSugerido = similar.getPetSize() == 1 ? "Pequeno" :
                                      similar.getPetSize() == 2 ? "Médio" : "Grande";
 
             int temperInt = similar.getPetTemper();
-            Animal.Temperamento temperamentoSugerido =
-                temperInt == 1 ? Animal.Temperamento.CALMO :
-                temperInt == 2 ? Animal.Temperamento.ATIVO :
-                temperInt == 3 ? Animal.Temperamento.TIMIDO :
-                Animal.Temperamento.SOCIÁVEL;
 
-            List<Animal> candidatos = animalRepository.findByTamanho(tamanhoSugerido);
+            Animal.Temperamento temperamentoSugerido = (temperInt == 1) ? Animal.Temperamento.CALMO : Animal.Temperamento.ATIVO;
 
-            Optional<Animal> matchPerfeito = candidatos.stream()
-                    .filter(a -> a.getTemperamento() == temperamentoSugerido && a.getStatus() == Animal.Status.DISPONIVEL)
-                    .findFirst();
+            List<Animal.Temperamento> temperamentosSugeridos =
+                (temperamentoSugerido == Animal.Temperamento.CALMO)
+                    ? Arrays.asList(Animal.Temperamento.CALMO, Animal.Temperamento.TIMIDO)
+                    : Arrays.asList(Animal.Temperamento.ATIVO, Animal.Temperamento.SOCIAVEL);
+
+            List<Animal> candidatosPorTamanho = animalRepository.findByTamanho(tamanhoSugerido);
+
+            List<Animal> candidatosFiltrados = candidatosPorTamanho.stream()
+                .filter(a -> a.getStatus() == Animal.Status.DISPONIVEL && temperamentosSugeridos.contains(a.getTemperamento()))
+                .collect(Collectors.toList());
 
             Animal recommendedAnimal;
 
-            if (matchPerfeito.isPresent()) {
-                recommendedAnimal = matchPerfeito.get();
-            } else if (!candidatos.isEmpty()) {
+            if (!candidatosFiltrados.isEmpty()) {
 
-                recommendedAnimal = candidatos.get(0);
+                recommendedAnimal = candidatosFiltrados.get(0);
+            } else if (!candidatosPorTamanho.stream().filter(a -> a.getStatus() == Animal.Status.DISPONIVEL).collect(Collectors.toList()).isEmpty()) {
+
+                recommendedAnimal = candidatosPorTamanho.stream().filter(a -> a.getStatus() == Animal.Status.DISPONIVEL).findFirst().get();
             } else {
 
-                List<Animal> todos = animalRepository.findByStatus(Animal.Status.DISPONIVEL);
-                if (!todos.isEmpty()) {
-                    recommendedAnimal = todos.get(0);
+                List<Animal> todosDisponiveis = animalRepository.findByStatus(Animal.Status.DISPONIVEL);
+                if (!todosDisponiveis.isEmpty()) {
+                    recommendedAnimal = todosDisponiveis.get(0);
                 } else {
                     response.put("success", false);
                     response.put("message", "Nenhum animal disponível encontrado no momento.");
@@ -552,18 +633,26 @@ public class AIController {
                 }
             }
 
+            String iaReasoning = String.format(
+                "Baseado no seu perfil, recomendamos um animal de porte %s e temperamento %s.",
+                tamanhoSugerido.toLowerCase(),
+                temperamentoSugerido.toString().toLowerCase()
+            );
+
             response.put("success", true);
             response.put("animal", recommendedAnimal);
-            response.put("matchScore", similar.getMatch());
-            response.put("iaReasoning", "Baseado no seu perfil, recomendamos um animal de porte " + tamanhoSugerido);
+            response.put("matchScore", similar.getMatch() > 1 ? similar.getMatch() : similar.getMatch() * 100);
+            response.put("iaReasoning", iaReasoning);
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
+            System.out.println("ERRO NO MATCHING:");
             e.printStackTrace();
+            
             response.put("success", false);
-            response.put("message", "Erro ao executar matching: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            response.put("message", "Erro interno no servidor: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
         }
     }
 }
@@ -595,7 +684,7 @@ public class Animal {
     private Long id;
 
     @Column(nullable = false)
-    private String nome; // Adicionado para o Frontend
+    private String nome;
 
     @Column(nullable = false)
     private String raca;
@@ -605,7 +694,7 @@ public class Animal {
     private String tamanho;
     
     @Column(nullable = false)
-    private String localizacao; // Adicionado para o Frontend
+    private String localizacao;
 
     @Enumerated(EnumType.STRING)
     private Temperamento temperamento;
@@ -613,17 +702,17 @@ public class Animal {
     private String cor;
 
     @ElementCollection
-    @CollectionTable(name = "vacinas_tomadas", joinColumns = @JoinColumn(name = "id_animal"))
+    @CollectionTable(name = "vacinas_tomadas", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "vacina")
     private List<String> vacinasTomadas = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "vacinas_pendentes", joinColumns = @JoinColumn(name = "id_animal"))
+    @CollectionTable(name = "vacinas_pendentes", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "vacina")
     private List<String> vacinasPendentes = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "fotos_animal", joinColumns = @JoinColumn(name = "id_animal"))
+    @CollectionTable(name = "fotos_animal", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "foto_url")
     private List<String> fotos = new ArrayList<>();
 
@@ -638,10 +727,9 @@ public class Animal {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    public enum Temperamento { CALMO, ATIVO, TIMIDO, SOCIÁVEL }
+    public enum Temperamento { CALMO, ATIVO, TIMIDO, SOCIAVEL }
     public enum Status { DISPONIVEL, ADOTADO, TRANSFERIDO }
 
-    // Métodos auxiliares
     public void adicionarVacinaTomada(String vacina) { vacinasTomadas.add(vacina); }
     public void adicionarVacinaPendente(String vacina) { vacinasPendentes.add(vacina); }
     public void adicionarFoto(String fotoUrl) { fotos.add(fotoUrl); }
@@ -651,7 +739,6 @@ public class Animal {
         this.status = novoStatus;
     }
 }
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\Animal.java ---
 
 
@@ -675,12 +762,14 @@ public class AnimalController {
 
     @GetMapping
     public ResponseEntity<List<Animal>> listarTodos() {
-        List<Animal> animais = animalRepository.findAll();
+
+        List<Animal> animais = animalRepository.findAllWithFotos();
         return ResponseEntity.ok(animais);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Animal> buscarPorId(@PathVariable Long id) {
+
         Optional<Animal> animal = animalRepository.findById(id);
         return animal.map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
@@ -688,12 +777,11 @@ public class AnimalController {
 
     @PostMapping
     public ResponseEntity<Animal> criar(@RequestBody Animal animal) {
-        // TODO: Add admin authentication check
+
         Animal novoAnimal = animalRepository.save(animal);
         return ResponseEntity.ok(novoAnimal);
     }
 }
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\AnimalController.java ---
 
 
@@ -792,6 +880,7 @@ public class AStar {
 package com.adotematch.ai;
 
 import com.adotematch.ai.model.Adotante;
+import com.adotematch.ai.repository.AdotanteRepository;
 import com.adotematch.ai.service.AdotanteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -800,6 +889,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -807,6 +897,9 @@ public class AuthController {
 
     @Autowired
     private AdotanteService adotanteService;
+
+    @Autowired
+    private AdotanteRepository adotanteRepository;
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
@@ -822,16 +915,22 @@ public class AuthController {
         }
 
         boolean isValid = adotanteService.validarLogin(email, senha);
+        
         if (isValid) {
-            response.put("success", true);
-            response.put("message", "Login realizado com sucesso");
 
-            return ResponseEntity.ok(response);
-        } else {
-            response.put("success", false);
-            response.put("message", "Credenciais inválidas");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
+            Optional<Adotante> usuarioLogado = adotanteRepository.findByEmail(email);
+            
+            if (usuarioLogado.isPresent()) {
+                response.put("success", true);
+                response.put("message", "Login realizado com sucesso");
+                response.put("user", usuarioLogado.get());
+                return ResponseEntity.ok(response);
+            }
+        } 
+
+        response.put("success", false);
+        response.put("message", "Credenciais inválidas. Verifique seu e-mail e senha.");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @PostMapping("/register")
@@ -849,9 +948,12 @@ public class AuthController {
             response.put("message", "Usuário cadastrado com sucesso");
             response.put("user", novoAdotante);
             return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
+
             response.put("success", false);
-            response.put("message", "Erro ao cadastrar: " + e.getMessage());
+
+            response.put("message", e.getMessage()); 
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -890,13 +992,12 @@ public class Case {
     public double getPetAge() { return petAge; }
     public int getMatch() { return match; }
 
-    // Método para calcular distância Euclidiana (similaridade)
     public double distanceTo(Case other) {
         return Math.sqrt(
                 Math.pow(adopterSpace - other.adopterSpace, 2) +
                 Math.pow(adopterTime - other.adopterTime, 2) +
                 Math.pow(adopterPrefTemper - other.adopterPrefTemper, 2)
-        );  // Simplificado, ignore pet features para retrieve
+        );
     }
 }
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\Case.java ---
@@ -912,13 +1013,30 @@ public class CaseBase {
     private final List<Case> cases = new ArrayList<>();
 
     public CaseBase() {
-        // Popular com dados sintéticos do seu relatório (1000 amostras simplificadas para 5 exemplos)
+
         cases.add(new Case(100, 8, 1, 1, 1, 5, 1));
         cases.add(new Case(30, 2, 0, 2, 0, 10, 0));
-        cases.add(new Case(150, 10, 1, 0, 1, 3, 1));
+        cases.add(new Case(150, 10, 1, 3, 1, 3, 1));
         cases.add(new Case(60, 4, 0, 1, 0, 7, 0));
         cases.add(new Case(200, 12, 1, 2, 1, 1, 1));
-        // Adicione mais baseados no Python code do relatório
+
+        cases.add(new Case(40, 2, 1, 1, 1, 3, 1));
+
+        cases.add(new Case(50, 6, 0, 1, 0, 2, 1));
+
+        cases.add(new Case(250, 8, 0, 3, 0, 4, 1));
+
+        cases.add(new Case(90, 4, 1, 2, 1, 6, 1));
+
+        cases.add(new Case(90, 5, 0, 2, 0, 3, 1));
+
+        cases.add(new Case(180, 2, 1, 3, 1, 5, 1));
+
+        cases.add(new Case(180, 2, 0, 3, 0, 5, 0));
+
+        cases.add(new Case(70, 3, 1, 2, 1, 8, 1));
+        cases.add(new Case(120, 6, 0, 3, 0, 2, 1));
+        cases.add(new Case(300, 10, 0, 3, 0, 1, 1));
     }
 
     public List<Case> getCases() {
@@ -929,7 +1047,6 @@ public class CaseBase {
         cases.add(newCase);
     }
 }
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\CaseBase.java ---
 
 
@@ -1176,7 +1293,6 @@ package com.adotematch.ai;
 public class RBC {
     private final CaseBase caseBase = new CaseBase();
 
-    // Retrieve: Encontra caso similar
     public Case retrieveSimilarCase(Case newCase) {
         Case best = null;
         double minDist = Double.MAX_VALUE;
@@ -1187,10 +1303,9 @@ public class RBC {
                 best = c;
             }
         }
-        return best;  // Reuse: retorna o caso similar
+        return best;
     }
 
-    // Revise e Retain: simplificado, adicione se necessário
     public void retain(Case newCase) {
         caseBase.addCase(newCase);
     }
@@ -1422,22 +1537,29 @@ package com.adotematch.ai.repository;
 
 import com.adotematch.ai.Animal;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
 public interface AnimalRepository extends JpaRepository<Animal, Long> {
-    List<Animal> findByStatus(Animal.Status status);
-    List<Animal> findByRaca(String raca);
-    List<Animal> findByTamanho(String tamanho);
-}
 
+    List<Animal> findByStatus(Animal.Status status);
+
+    List<Animal> findByRaca(String raca);
+
+    List<Animal> findByTamanho(String tamanho);
+
+    @Query("SELECT DISTINCT a FROM Animal a LEFT JOIN FETCH a.fotos LEFT JOIN FETCH a.vacinasTomadas LEFT JOIN FETCH a.vacinasPendentes")
+    List<Animal> findAllWithFotos();
+}
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\repository\AnimalRepository.java ---
 
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\service\AdotanteService.java ---
 package com.adotematch.ai.service;
+
 import com.adotematch.ai.model.Adotante;
 import com.adotematch.ai.repository.AdotanteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1447,18 +1569,34 @@ import java.util.Optional;
 
 @Service
 public class AdotanteService {
-    @Autowired private AdotanteRepository repository;
-    @Autowired private PasswordEncoder encoder;
+
+    @Autowired
+    private AdotanteRepository repository;
+
+    @Autowired
+    private PasswordEncoder encoder;
 
     public Adotante salvar(Adotante adotante) {
+
+        Optional<Adotante> existente = repository.findByEmail(adotante.getEmail());
+        
+        if (existente.isPresent()) {
+
+            throw new RuntimeException("Este email já está cadastrado. Tente fazer login.");
+        }
+
         adotante.setSenha(encoder.encode(adotante.getSenha()));
         return repository.save(adotante);
     }
 
     public boolean validarLogin(String email, String senha) {
         Optional<Adotante> opt = repository.findByEmail(email);
-        if (opt.isEmpty()) return false;
+        if (opt.isEmpty()) {
+            return false;
+        }
+        
         Adotante a = opt.get();
+
         return a.getSenha() != null && encoder.matches(senha, a.getSenha());
     }
 }
@@ -2056,36 +2194,42 @@ export interface Animal {
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\components\AnimalCard.tsx ---
 import { Link } from "react-router-dom";
 import { Heart, MapPin, Check, Home } from "lucide-react";
-import { Animal } from "@/types";
+import { Animal as AnimalType } from "@/services/api";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { cn } from "@/lib/utils";
 
 interface AnimalCardProps {
-  animal: Animal;
+  animal: AnimalType;
 }
 
 const AnimalCard = ({ animal }: AnimalCardProps) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(animal.id);
 
+  const isAvailable = animal.status === 'DISPONIVEL';
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (animal.disponivel) {
+    if (isAvailable) {
       toggleFavorite(animal.id);
     }
   };
+
+  const imageUrl = (animal.fotos && animal.fotos.length > 0) 
+    ? animal.fotos[0] 
+    : 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&q=80';
 
   const CardContent = (
     <div
       className={cn(
         "relative bg-card rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group",
-        !animal.disponivel && "grayscale opacity-70"
+        !isAvailable && "grayscale opacity-70"
       )}
     >
       {/* Status Tag */}
       <div className="absolute top-3 left-3 z-10">
-        {animal.disponivel ? (
+        {isAvailable ? (
           <div className="flex items-center gap-1 bg-success text-success-foreground px-3 py-1 rounded-full text-xs font-semibold shadow-md">
             <Check className="w-3 h-3" />
             <span>Disponível</span>
@@ -2101,19 +2245,19 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
       {/* Favorite Button */}
       <button
         onClick={handleFavoriteClick}
-        disabled={!animal.disponivel}
+        disabled={!isAvailable}
         className={cn(
           "absolute top-3 right-3 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 shadow-md",
-          animal.disponivel
+          isAvailable
             ? "bg-white hover:scale-110"
             : "bg-gray-300 cursor-not-allowed",
-          favorite && animal.disponivel && "bg-accent"
+          favorite && isAvailable && "bg-accent"
         )}
       >
         <Heart
           className={cn(
             "w-5 h-5 transition-colors",
-            favorite && animal.disponivel ? "fill-white text-white" : "text-accent"
+            favorite && isAvailable ? "fill-white text-white" : "text-accent"
           )}
         />
       </button>
@@ -2121,11 +2265,11 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
       {/* Image */}
       <div className="aspect-square overflow-hidden">
         <img
-          src={animal.imagemUrl}
+          src={imageUrl}
           alt={animal.nome}
           className={cn(
             "w-full h-full object-cover transition-transform duration-300",
-            animal.disponivel && "group-hover:scale-110"
+            isAvailable && "group-hover:scale-110"
           )}
         />
       </div>
@@ -2135,7 +2279,7 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
         <h3 className="text-xl font-bold text-card-foreground mb-1">
           {animal.nome}
         </h3>
-        <p className="text-muted-foreground text-sm mb-2">{animal.raça}</p>
+        <p className="text-muted-foreground text-sm mb-2">{animal.raca}</p>
         <div className="flex items-center gap-1 text-gray-text text-sm">
           <MapPin className="w-4 h-4" />
           <span>{animal.localizacao}</span>
@@ -2144,7 +2288,7 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
     </div>
   );
 
-  if (!animal.disponivel) {
+  if (!isAvailable) {
     return <div className="cursor-not-allowed">{CardContent}</div>;
   }
 
@@ -2156,7 +2300,6 @@ const AnimalCard = ({ animal }: AnimalCardProps) => {
 };
 
 export default AnimalCard;
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\components\AnimalCard.tsx ---
 
 
@@ -8146,42 +8289,60 @@ export default AnimalProfilePage;
 
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\BuscarPage.tsx ---
-import { useState, useMemo } from "react";
-import { mockAnimals } from "@/data/mockAnimals";
+import { useState, useMemo, useEffect } from "react";
 import AnimalCard from "@/components/AnimalCard";
 import { Search } from "lucide-react";
+import { animalApi, Animal as AnimalType } from "@/services/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BuscarPage = () => {
+
+  const [allAnimals, setAllAnimals] = useState<AnimalType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRace, setSelectedRace] = useState("todas");
   const [selectedSize, setSelectedSize] = useState("todos");
   const [selectedLocation, setSelectedLocation] = useState("todas");
 
-  // Extract unique values for filters
-  const races = useMemo(() => {
-    const uniqueRaces = Array.from(new Set(mockAnimals.map(animal => animal.raça)));
-    return ["todas", ...uniqueRaces];
+  useEffect(() => {
+    const fetchAnimals = async () => {
+      setIsLoading(true);
+      try {
+        const response = await animalApi.getAll();
+        setAllAnimals(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar animais na página de busca:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAnimals();
   }, []);
+
+  const races = useMemo(() => {
+    const uniqueRaces = Array.from(new Set(allAnimals.map(animal => animal.raca)));
+    return ["todas", ...uniqueRaces.sort()];
+  }, [allAnimals]);
 
   const sizes = ["todos", "Pequeno", "Médio", "Grande"];
   
   const locations = useMemo(() => {
-    const uniqueLocations = Array.from(new Set(mockAnimals.map(animal => animal.localizacao)));
-    return ["todas", ...uniqueLocations];
-  }, []);
+    const uniqueLocations = Array.from(new Set(allAnimals.map(animal => animal.localizacao)));
+    return ["todas", ...uniqueLocations.sort()];
+  }, [allAnimals]);
 
-  // Filter animals based on search and filters
   const filteredAnimals = useMemo(() => {
-    return mockAnimals.filter(animal => {
+    return allAnimals.filter(animal => {
       const matchesSearch = animal.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           animal.raça.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRace = selectedRace === "todas" || animal.raça === selectedRace;
-      const matchesSize = selectedSize === "todos" || animal.porte === selectedSize;
+                           animal.raca.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRace = selectedRace === "todas" || animal.raca === selectedRace;
+      const matchesSize = selectedSize === "todos" || animal.tamanho === selectedSize;
       const matchesLocation = selectedLocation === "todas" || animal.localizacao === selectedLocation;
       
       return matchesSearch && matchesRace && matchesSize && matchesLocation;
     });
-  }, [searchTerm, selectedRace, selectedSize, selectedLocation]);
+  }, [searchTerm, selectedRace, selectedSize, selectedLocation, allAnimals]);
 
   return (
     <div className="min-h-screen pt-24 pb-16 bg-light-bg">
@@ -8273,7 +8434,17 @@ const BuscarPage = () => {
         </div>
 
         {/* Animals Grid */}
-        {filteredAnimals.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 12 }).map((_, index) => (
+              <div key={index} className="space-y-3">
+                <Skeleton className="aspect-square w-full rounded-xl" />
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : filteredAnimals.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredAnimals.map((animal) => (
               <AnimalCard key={animal.id} animal={animal} />
@@ -8303,7 +8474,6 @@ const BuscarPage = () => {
 };
 
 export default BuscarPage;
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\BuscarPage.tsx ---
 
 
@@ -8376,13 +8546,37 @@ export default FavoritesPage;
 
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\HomePage.tsx ---
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AnimalCard from "@/components/AnimalCard";
 import Button from "@/components/Button";
-import { mockAnimals } from "@/data/mockAnimals";
+import { animalApi, Animal as AnimalType } from "@/services/api";
 import { Heart, PawPrint } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const HomePage = () => {
+  const [animals, setAnimals] = useState<AnimalType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnimals = async () => {
+      setIsLoading(true);
+      try {
+        const response = await animalApi.getAll();
+        setAnimals(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar animais:", error);
+
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnimals();
+  }, []);
+
+  const featuredAnimals = animals.filter(a => a.status === 'DISPONIVEL').slice(0, 8);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -8440,11 +8634,23 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {mockAnimals.map((animal) => (
-              <AnimalCard key={animal.id} animal={animal} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="space-y-3">
+                  <Skeleton className="h-60 w-full rounded-xl" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {featuredAnimals.map((animal) => (
+                <AnimalCard key={animal.id} animal={animal} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -8458,16 +8664,11 @@ const HomePage = () => {
             Adotar é um ato de amor. Dê a um animal a chance de ter um lar e
             ganhe um companheiro fiel para toda a vida.
           </p>
-          <Button
-            variant="accent"
-            onClick={() =>
-              document
-                .getElementById("animais-section")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-          >
-            Comece sua jornada
-          </Button>
+          <Link to="/buscar">
+             <Button variant="accent">
+                Ver todos os animais
+             </Button>
+          </Link>
         </div>
       </section>
     </div>
@@ -8475,14 +8676,13 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\HomePage.tsx ---
 
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\LoginPage.tsx ---
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { PawPrint, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { PawPrint, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8493,7 +8693,7 @@ import { z } from "zod";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
-  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
+  senha: z.string().min(1, "A senha é obrigatória"), 
 });
 
 const LoginPage = () => {
@@ -8539,10 +8739,18 @@ const LoginPage = () => {
         });
         navigate("/");
       } else {
-        setErrors({ general: result.message || "Credenciais inválidas" });
+
+        setErrors({ general: result.message || "Email ou senha incorretos." });
+        
+        toast({
+            variant: "destructive",
+            title: "Falha no Login",
+            description: result.message || "Verifique suas credenciais e tente novamente.",
+        });
       }
     } catch (error) {
-      setErrors({ general: "Erro ao conectar com o servidor" });
+      console.error("Login error:", error);
+      setErrors({ general: "Erro ao conectar com o servidor. Tente novamente mais tarde." });
     } finally {
       setIsLoading(false);
     }
@@ -8593,7 +8801,7 @@ const LoginPage = () => {
                   )}
                 </div>
 
-                {/* Password */}
+                {/* Password com Olhinho */}
                 <div className="space-y-2">
                   <Label htmlFor="senha" className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-primary" />
@@ -8606,13 +8814,14 @@ const LoginPage = () => {
                       placeholder="••••••••"
                       value={senha}
                       onChange={(e) => setSenha(e.target.value)}
-                      className={errors.senha ? "border-destructive pr-10" : "pr-10"}
+                      className={`pr-10 ${errors.senha ? "border-destructive" : ""}`}
                       autoComplete="current-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+                      tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -8627,7 +8836,7 @@ const LoginPage = () => {
 
                 {/* General Error */}
                 {errors.general && (
-                  <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-lg">
+                  <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-lg animate-in fade-in slide-in-from-top-1">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <span>{errors.general}</span>
                   </div>
@@ -8640,7 +8849,7 @@ const LoginPage = () => {
                   className="w-full text-lg py-3"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Entrando..." : "Entrar"}
+                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Entrar"}
                 </Button>
               </form>
 
@@ -8654,7 +8863,7 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              {/* Sign Up Link - CORRIGIDO PARA /cadastro */}
+              {/* Sign Up Link */}
               <p className="text-center text-muted-foreground">
                 Não tem uma conta?{" "}
                 <Link to="/cadastro" className="text-primary hover:underline font-medium">
@@ -8716,37 +8925,27 @@ const MatchPage = () => {
     setResult(null);
 
     try {
-
       const response = await matchApi.findMatch({
         espacoEmCasa: parseFloat(espacoEmCasa.toString()),
         tempoDisponivel: parseFloat(tempoDisponivel.toString()),
         preferenciaTemperamento: parseInt(preferenciaTemperamento, 10),
       });
       
-      if (response.success) {
+      if (response.success && response.animal) {
         setResult(response);
         toast({
-          title: "Sucesso!",
+          title: "Match encontrado!",
           description: "A IA encontrou um companheiro para você.",
         });
       } else {
-
-        const msg = response.message || "Não encontramos um match perfeito, mas mostramos o animal mais compatível.";
+        const msg = response.message || "Não foi possível encontrar um animal com este perfil.";
         setError(msg);
-        if (response.animal) {
-          setResult(response);
-          toast({
-            title: "Atenção",
+        setResult(response);
+        toast({
+            title: "Ops!",
             description: msg,
-            variant: "default",
-          });
-        } else {
-            toast({
-                title: "Ops!",
-                description: msg,
-                variant: "destructive",
-            });
-        }
+            variant: "destructive",
+        });
       }
     } catch (err: any) {
       const message = err.response?.data?.message || "Erro ao conectar com o servidor. Verifique se o backend Java está rodando.";
@@ -8882,7 +9081,7 @@ const MatchPage = () => {
                   </RadioGroup>
                 </div>
 
-                {error && !result && (
+                {error && (
                   <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-lg">
                     <AlertCircle className="w-5 h-5" />
                     <span>{error}</span>
@@ -8926,22 +9125,36 @@ interface MatchResultProps {
 const MatchResult = ({ result, onReset }: MatchResultProps) => {
   const { animal, matchScore, iaReasoning } = result;
 
-  const displayScore = matchScore !== undefined 
-    ? (matchScore <= 1 ? Math.round(matchScore * 100) : matchScore) 
-    : 85; // Fallback visual
-
-  const animalImage = animal?.imagemUrl || 
-                      (animal?.fotos && animal.fotos.length > 0 ? animal.fotos[0] : null) || 
-                      `https://source.unsplash.com/600x600/?${animal?.raca || 'dog'},pet`;
-
   if (!animal) {
-      return (
-          <div className="text-center">
-              <h2 className="text-2xl font-bold text-destructive">Erro ao exibir resultado</h2>
-              <Button onClick={onReset} className="mt-4">Tentar Novamente</Button>
-          </div>
-      )
+    return (
+        <div className="max-w-md mx-auto text-center">
+            <Card className="shadow-xl border-2 border-destructive/20">
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2 justify-center">
+                      <AlertCircle className="w-6 h-6 text-destructive" />
+                      Nenhum Match Encontrado
+                  </CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                      {result.message || "Não conseguimos encontrar um animal disponível com esse perfil no momento."}
+                  </p>
+                  <Button variant="outline" onClick={onReset}>Tentar Novamente</Button>
+              </CardContent>
+            </Card>
+        </div>
+    )
   }
+
+  const displayScore = matchScore !== undefined 
+    ? (matchScore <= 1 ? Math.round(matchScore * 100) : Math.round(matchScore)) 
+    : 85;
+
+  const animalImage = (animal.fotos && animal.fotos.length > 0)
+    ? animal.fotos[0] 
+    : `https://source.unsplash.com/600x600/?${animal.raca || 'dog'},pet`;
+
+  const temperamentos = animal.temperamento ? [animal.temperamento] : [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -8950,48 +9163,20 @@ const MatchResult = ({ result, onReset }: MatchResultProps) => {
         <div className="bg-gradient-to-r from-primary to-secondary p-6 text-primary-foreground text-center">
           <Sparkles className="w-12 h-12 mx-auto mb-4" />
           <h2 className="text-3xl font-bold mb-2">Match Encontrado!</h2>
-          <p className="opacity-90">A IA encontrou o pet perfeito para você</p>
+          <p className="opacity-90">A IA encontrou um pet para você</p>
         </div>
         <CardContent className="pt-8">
-          {/* Circular Progress */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative w-40 h-40">
               <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  fill="none"
-                  className="text-muted/20"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  fill="none"
-                  strokeDasharray={`${(displayScore / 100) * 440} 440`}
-                  strokeLinecap="round"
-                  className="text-primary transition-all duration-1000"
-                />
+                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="none" className="text-muted/20" />
+                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="none" strokeDasharray={`${(displayScore / 100) * 440} 440`} strokeLinecap="round" className="text-primary transition-all duration-1000" />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center flex-col">
                 <span className="text-4xl font-bold text-primary">{displayScore}%</span>
                 <span className="text-sm text-muted-foreground">Compatibilidade</span>
               </div>
             </div>
-          </div>
-
-          {/* Linear Progress Alternative */}
-          <div className="space-y-2 mb-8">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Compatibilidade</span>
-              <span className="font-semibold text-primary">{displayScore}%</span>
-            </div>
-            <Progress value={displayScore} className="h-3" />
           </div>
         </CardContent>
       </Card>
@@ -9004,52 +9189,28 @@ const MatchResult = ({ result, onReset }: MatchResultProps) => {
               src={animalImage}
               alt={animal.nome}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                  // Fallback final de imagem
-                  e.currentTarget.src = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80";
-              }}
             />
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-primary shadow-sm">
                 {animal.status || "Disponível"}
             </div>
           </div>
           <div className="p-6 flex flex-col justify-center">
-            <div className="flex justify-between items-start mb-2">
-                <h3 className="text-3xl font-bold text-foreground">{animal.nome}</h3>
-                <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">{animal.id}</span>
-            </div>
-            
+            <h3 className="text-3xl font-bold text-foreground">{animal.nome}</h3>
             <p className="text-muted-foreground mb-4 font-medium text-lg">{animal.raca}</p>
-            
             <div className="space-y-2 mb-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> 
-                    <span>{animal.idade} anos</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Home className="w-4 h-4" /> 
-                    <span>Porte {animal.tamanho || animal.porte}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" /> 
-                    <span>{animal.localizacao}</span>
-                </div>
+                <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> <span>{animal.idade} anos</span></div>
+                <div className="flex items-center gap-2"><Home className="w-4 h-4" /> <span>Porte {animal.tamanho}</span></div>
+                <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /> <span>{animal.localizacao}</span></div>
             </div>
-
             <div className="flex flex-wrap gap-2 mb-6">
-                {/* Renderiza temperamento. Se for string única (Java enum), coloca em array */}
-                {(Array.isArray(animal.temperamento) ? animal.temperamento : [animal.temperamento]).map((trait, index) => (
+                {temperamentos.map((trait, index) => (
                     trait && (
-                    <span
-                        key={index}
-                        className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-medium"
-                    >
+                    <span key={index} className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-medium">
                         {trait}
                     </span>
                     )
                 ))}
             </div>
-
             <Link to={`/animal/${animal.id}`}>
               <Button variant="primary" className="w-full">
                 Ver Perfil Completo
@@ -9063,18 +9224,11 @@ const MatchResult = ({ result, onReset }: MatchResultProps) => {
       {/* IA Reasoning Card */}
       <Card className="shadow-xl border-2 border-accent/20">
         <CardHeader className="bg-accent/5">
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-accent" />
-            Análise da IA
-          </CardTitle>
-          <CardDescription>
-            Veja por que este pet é ideal para você
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-accent" />Análise da IA</CardTitle>
+          <CardDescription>Veja por que este pet é ideal para você</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <p className="text-foreground leading-relaxed whitespace-pre-line">
-            {iaReasoning || "Com base no seu espaço e tempo disponível, este animal tem as características ideais para se adaptar à sua rotina."}
-          </p>
+          <p className="text-foreground leading-relaxed whitespace-pre-line">{iaReasoning || "Com base no seu perfil, este animal tem as características ideais para se adaptar à sua rotina."}</p>
         </CardContent>
       </Card>
 
@@ -9124,7 +9278,7 @@ export default NotFound;
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\pages\RegisterPage.tsx ---
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { PawPrint, User, Mail, Lock, MapPin, Home, Clock, ArrowRight, Loader2 } from "lucide-react";
+import { PawPrint, User, Mail, Lock, MapPin, Home, Clock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9136,6 +9290,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState({
     nome: "",
@@ -9175,14 +9330,13 @@ const RegisterPage = () => {
         });
       }
     } catch (error: any) {
-
       console.error("Erro detalhado no registro:", error);
 
       const serverMessage = error.response?.data?.message || "Erro ao conectar com o servidor.";
 
       toast({
         variant: "destructive",
-        title: "Erro",
+        title: "Atenção",
         description: serverMessage,
       });
     } finally {
@@ -9223,8 +9377,28 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <Label htmlFor="senha">Senha</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input id="senha" type="password" className="pl-9" placeholder="******" value={formData.senha} onChange={handleChange} required />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="senha" 
+                    type={showPassword ? "text" : "password"}
+                    className="pl-9 pr-10"
+                    placeholder="******" 
+                    value={formData.senha} 
+                    onChange={handleChange} 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
               </div>
 

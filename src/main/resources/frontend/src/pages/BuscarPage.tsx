@@ -1,39 +1,57 @@
-import { useState, useMemo } from "react";
-import { mockAnimals } from "@/data/mockAnimals";
+import { useState, useMemo, useEffect } from "react";
 import AnimalCard from "@/components/AnimalCard";
 import { Search } from "lucide-react";
+import { animalApi, Animal as AnimalType } from "@/services/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BuscarPage = () => {
+
+  const [allAnimals, setAllAnimals] = useState<AnimalType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRace, setSelectedRace] = useState("todas");
   const [selectedSize, setSelectedSize] = useState("todos");
   const [selectedLocation, setSelectedLocation] = useState("todas");
 
-  // Extract unique values for filters
-  const races = useMemo(() => {
-    const uniqueRaces = Array.from(new Set(mockAnimals.map(animal => animal.raça)));
-    return ["todas", ...uniqueRaces];
+  useEffect(() => {
+    const fetchAnimals = async () => {
+      setIsLoading(true);
+      try {
+        const response = await animalApi.getAll();
+        setAllAnimals(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar animais na página de busca:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAnimals();
   }, []);
+
+  const races = useMemo(() => {
+    const uniqueRaces = Array.from(new Set(allAnimals.map(animal => animal.raca)));
+    return ["todas", ...uniqueRaces.sort()];
+  }, [allAnimals]);
 
   const sizes = ["todos", "Pequeno", "Médio", "Grande"];
   
   const locations = useMemo(() => {
-    const uniqueLocations = Array.from(new Set(mockAnimals.map(animal => animal.localizacao)));
-    return ["todas", ...uniqueLocations];
-  }, []);
+    const uniqueLocations = Array.from(new Set(allAnimals.map(animal => animal.localizacao)));
+    return ["todas", ...uniqueLocations.sort()];
+  }, [allAnimals]);
 
-  // Filter animals based on search and filters
   const filteredAnimals = useMemo(() => {
-    return mockAnimals.filter(animal => {
+    return allAnimals.filter(animal => {
       const matchesSearch = animal.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           animal.raça.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRace = selectedRace === "todas" || animal.raça === selectedRace;
-      const matchesSize = selectedSize === "todos" || animal.porte === selectedSize;
+                           animal.raca.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRace = selectedRace === "todas" || animal.raca === selectedRace;
+      const matchesSize = selectedSize === "todos" || animal.tamanho === selectedSize;
       const matchesLocation = selectedLocation === "todas" || animal.localizacao === selectedLocation;
       
       return matchesSearch && matchesRace && matchesSize && matchesLocation;
     });
-  }, [searchTerm, selectedRace, selectedSize, selectedLocation]);
+  }, [searchTerm, selectedRace, selectedSize, selectedLocation, allAnimals]);
 
   return (
     <div className="min-h-screen pt-24 pb-16 bg-light-bg">
@@ -125,7 +143,17 @@ const BuscarPage = () => {
         </div>
 
         {/* Animals Grid */}
-        {filteredAnimals.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 12 }).map((_, index) => (
+              <div key={index} className="space-y-3">
+                <Skeleton className="aspect-square w-full rounded-xl" />
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : filteredAnimals.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredAnimals.map((animal) => (
               <AnimalCard key={animal.id} animal={animal} />

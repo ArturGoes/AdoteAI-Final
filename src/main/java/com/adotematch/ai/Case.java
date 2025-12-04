@@ -28,12 +28,11 @@ public class Case {
     public double getPetAge() { return petAge; }
     public int getMatch() { return match; }
 
-    // Método para calcular distância Euclidiana (similaridade)
     public double distanceTo(Case other) {
         return Math.sqrt(
                 Math.pow(adopterSpace - other.adopterSpace, 2) +
                 Math.pow(adopterTime - other.adopterTime, 2) +
                 Math.pow(adopterPrefTemper - other.adopterPrefTemper, 2)
-        );  // Simplificado, ignore pet features para retrieve
+        );
     }
 }

@@ -33,37 +33,27 @@ const MatchPage = () => {
     setResult(null);
 
     try {
-
       const response = await matchApi.findMatch({
         espacoEmCasa: parseFloat(espacoEmCasa.toString()),
         tempoDisponivel: parseFloat(tempoDisponivel.toString()),
         preferenciaTemperamento: parseInt(preferenciaTemperamento, 10),
       });
       
-      if (response.success) {
+      if (response.success && response.animal) {
         setResult(response);
         toast({
-          title: "Sucesso!",
+          title: "Match encontrado!",
           description: "A IA encontrou um companheiro para você.",
         });
       } else {
-
-        const msg = response.message || "Não encontramos um match perfeito, mas mostramos o animal mais compatível.";
+        const msg = response.message || "Não foi possível encontrar um animal com este perfil.";
         setError(msg);
-        if (response.animal) {
-          setResult(response);
-          toast({
-            title: "Atenção",
+        setResult(response);
+        toast({
+            title: "Ops!",
             description: msg,
-            variant: "default",
-          });
-        } else {
-            toast({
-                title: "Ops!",
-                description: msg,
-                variant: "destructive",
-            });
-        }
+            variant: "destructive",
+        });
       }
     } catch (err: any) {
       const message = err.response?.data?.message || "Erro ao conectar com o servidor. Verifique se o backend Java está rodando.";
@@ -199,7 +189,7 @@ const MatchPage = () => {
                   </RadioGroup>
                 </div>
 
-                {error && !result && (
+                {error && (
                   <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-lg">
                     <AlertCircle className="w-5 h-5" />
                     <span>{error}</span>
@@ -243,22 +233,36 @@ interface MatchResultProps {
 const MatchResult = ({ result, onReset }: MatchResultProps) => {
   const { animal, matchScore, iaReasoning } = result;
 
-  const displayScore = matchScore !== undefined 
-    ? (matchScore <= 1 ? Math.round(matchScore * 100) : matchScore) 
-    : 85; // Fallback visual
-
-  const animalImage = animal?.imagemUrl || 
-                      (animal?.fotos && animal.fotos.length > 0 ? animal.fotos[0] : null) || 
-                      `https://source.unsplash.com/600x600/?${animal?.raca || 'dog'},pet`;
-
   if (!animal) {
-      return (
-          <div className="text-center">
-              <h2 className="text-2xl font-bold text-destructive">Erro ao exibir resultado</h2>
-              <Button onClick={onReset} className="mt-4">Tentar Novamente</Button>
-          </div>
-      )
+    return (
+        <div className="max-w-md mx-auto text-center">
+            <Card className="shadow-xl border-2 border-destructive/20">
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2 justify-center">
+                      <AlertCircle className="w-6 h-6 text-destructive" />
+                      Nenhum Match Encontrado
+                  </CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <p className="text-muted-foreground mb-4">
+                      {result.message || "Não conseguimos encontrar um animal disponível com esse perfil no momento."}
+                  </p>
+                  <Button variant="outline" onClick={onReset}>Tentar Novamente</Button>
+              </CardContent>
+            </Card>
+        </div>
+    )
   }
+
+  const displayScore = matchScore !== undefined 
+    ? (matchScore <= 1 ? Math.round(matchScore * 100) : Math.round(matchScore)) 
+    : 85;
+
+  const animalImage = (animal.fotos && animal.fotos.length > 0)
+    ? animal.fotos[0] 
+    : `https://source.unsplash.com/600x600/?${animal.raca || 'dog'},pet`;
+
+  const temperamentos = animal.temperamento ? [animal.temperamento] : [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -267,48 +271,20 @@ const MatchResult = ({ result, onReset }: MatchResultProps) => {
         <div className="bg-gradient-to-r from-primary to-secondary p-6 text-primary-foreground text-center">
           <Sparkles className="w-12 h-12 mx-auto mb-4" />
           <h2 className="text-3xl font-bold mb-2">Match Encontrado!</h2>
-          <p className="opacity-90">A IA encontrou o pet perfeito para você</p>
+          <p className="opacity-90">A IA encontrou um pet para você</p>
         </div>
         <CardContent className="pt-8">
-          {/* Circular Progress */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative w-40 h-40">
               <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  fill="none"
-                  className="text-muted/20"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  fill="none"
-                  strokeDasharray={`${(displayScore / 100) * 440} 440`}
-                  strokeLinecap="round"
-                  className="text-primary transition-all duration-1000"
-                />
+                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="none" className="text-muted/20" />
+                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="none" strokeDasharray={`${(displayScore / 100) * 440} 440`} strokeLinecap="round" className="text-primary transition-all duration-1000" />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center flex-col">
                 <span className="text-4xl font-bold text-primary">{displayScore}%</span>
                 <span className="text-sm text-muted-foreground">Compatibilidade</span>
               </div>
             </div>
-          </div>
-
-          {/* Linear Progress Alternative */}
-          <div className="space-y-2 mb-8">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Compatibilidade</span>
-              <span className="font-semibold text-primary">{displayScore}%</span>
-            </div>
-            <Progress value={displayScore} className="h-3" />
           </div>
         </CardContent>
       </Card>
@@ -321,52 +297,28 @@ const MatchResult = ({ result, onReset }: MatchResultProps) => {
               src={animalImage}
               alt={animal.nome}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                  // Fallback final de imagem
-                  e.currentTarget.src = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80";
-              }}
             />
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-primary shadow-sm">
                 {animal.status || "Disponível"}
             </div>
           </div>
           <div className="p-6 flex flex-col justify-center">
-            <div className="flex justify-between items-start mb-2">
-                <h3 className="text-3xl font-bold text-foreground">{animal.nome}</h3>
-                <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">{animal.id}</span>
-            </div>
-            
+            <h3 className="text-3xl font-bold text-foreground">{animal.nome}</h3>
             <p className="text-muted-foreground mb-4 font-medium text-lg">{animal.raca}</p>
-            
             <div className="space-y-2 mb-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> 
-                    <span>{animal.idade} anos</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Home className="w-4 h-4" /> 
-                    <span>Porte {animal.tamanho || animal.porte}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" /> 
-                    <span>{animal.localizacao}</span>
-                </div>
+                <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> <span>{animal.idade} anos</span></div>
+                <div className="flex items-center gap-2"><Home className="w-4 h-4" /> <span>Porte {animal.tamanho}</span></div>
+                <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /> <span>{animal.localizacao}</span></div>
             </div>
-
             <div className="flex flex-wrap gap-2 mb-6">
-                {/* Renderiza temperamento. Se for string única (Java enum), coloca em array */}
-                {(Array.isArray(animal.temperamento) ? animal.temperamento : [animal.temperamento]).map((trait, index) => (
+                {temperamentos.map((trait, index) => (
                     trait && (
-                    <span
-                        key={index}
-                        className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-medium"
-                    >
+                    <span key={index} className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-medium">
                         {trait}
                     </span>
                     )
                 ))}
             </div>
-
             <Link to={`/animal/${animal.id}`}>
               <Button variant="primary" className="w-full">
                 Ver Perfil Completo
@@ -380,18 +332,11 @@ const MatchResult = ({ result, onReset }: MatchResultProps) => {
       {/* IA Reasoning Card */}
       <Card className="shadow-xl border-2 border-accent/20">
         <CardHeader className="bg-accent/5">
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-accent" />
-            Análise da IA
-          </CardTitle>
-          <CardDescription>
-            Veja por que este pet é ideal para você
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-accent" />Análise da IA</CardTitle>
+          <CardDescription>Veja por que este pet é ideal para você</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <p className="text-foreground leading-relaxed whitespace-pre-line">
-            {iaReasoning || "Com base no seu espaço e tempo disponível, este animal tem as características ideais para se adaptar à sua rotina."}
-          </p>
+          <p className="text-foreground leading-relaxed whitespace-pre-line">{iaReasoning || "Com base no seu perfil, este animal tem as características ideais para se adaptar à sua rotina."}</p>
         </CardContent>
       </Card>
 

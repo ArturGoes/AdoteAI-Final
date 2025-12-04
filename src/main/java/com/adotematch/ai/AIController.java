@@ -5,10 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/match")
@@ -24,42 +25,46 @@ public class AIController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-
             double space = Double.parseDouble(preferences.get("espacoEmCasa").toString());
             double time = Double.parseDouble(preferences.get("tempoDisponivel").toString());
             int prefTemper = Integer.parseInt(preferences.get("preferenciaTemperamento").toString());
 
-            Case newCase = new Case(space, time, prefTemper, 0, 0, 0, 0);
+            int simplifiedPrefTemper = (prefTemper == 1 || prefTemper == 3) ? 1 : 0;
+
+            Case newCase = new Case(space, time, simplifiedPrefTemper, 0, 0, 0, 0);
             Case similar = rbc.retrieveSimilarCase(newCase);
 
             String tamanhoSugerido = similar.getPetSize() == 1 ? "Pequeno" :
                                      similar.getPetSize() == 2 ? "Médio" : "Grande";
 
             int temperInt = similar.getPetTemper();
-            Animal.Temperamento temperamentoSugerido =
-                temperInt == 1 ? Animal.Temperamento.CALMO :
-                temperInt == 2 ? Animal.Temperamento.ATIVO :
-                temperInt == 3 ? Animal.Temperamento.TIMIDO :
-                Animal.Temperamento.SOCIÁVEL;
 
-            List<Animal> candidatos = animalRepository.findByTamanho(tamanhoSugerido);
+            Animal.Temperamento temperamentoSugerido = (temperInt == 1) ? Animal.Temperamento.CALMO : Animal.Temperamento.ATIVO;
 
-            Optional<Animal> matchPerfeito = candidatos.stream()
-                    .filter(a -> a.getTemperamento() == temperamentoSugerido && a.getStatus() == Animal.Status.DISPONIVEL)
-                    .findFirst();
+            List<Animal.Temperamento> temperamentosSugeridos =
+                (temperamentoSugerido == Animal.Temperamento.CALMO)
+                    ? Arrays.asList(Animal.Temperamento.CALMO, Animal.Temperamento.TIMIDO)
+                    : Arrays.asList(Animal.Temperamento.ATIVO, Animal.Temperamento.SOCIAVEL);
+
+            List<Animal> candidatosPorTamanho = animalRepository.findByTamanho(tamanhoSugerido);
+
+            List<Animal> candidatosFiltrados = candidatosPorTamanho.stream()
+                .filter(a -> a.getStatus() == Animal.Status.DISPONIVEL && temperamentosSugeridos.contains(a.getTemperamento()))
+                .collect(Collectors.toList());
 
             Animal recommendedAnimal;
 
-            if (matchPerfeito.isPresent()) {
-                recommendedAnimal = matchPerfeito.get();
-            } else if (!candidatos.isEmpty()) {
+            if (!candidatosFiltrados.isEmpty()) {
 
-                recommendedAnimal = candidatos.get(0);
+                recommendedAnimal = candidatosFiltrados.get(0);
+            } else if (!candidatosPorTamanho.stream().filter(a -> a.getStatus() == Animal.Status.DISPONIVEL).collect(Collectors.toList()).isEmpty()) {
+
+                recommendedAnimal = candidatosPorTamanho.stream().filter(a -> a.getStatus() == Animal.Status.DISPONIVEL).findFirst().get();
             } else {
 
-                List<Animal> todos = animalRepository.findByStatus(Animal.Status.DISPONIVEL);
-                if (!todos.isEmpty()) {
-                    recommendedAnimal = todos.get(0);
+                List<Animal> todosDisponiveis = animalRepository.findByStatus(Animal.Status.DISPONIVEL);
+                if (!todosDisponiveis.isEmpty()) {
+                    recommendedAnimal = todosDisponiveis.get(0);
                 } else {
                     response.put("success", false);
                     response.put("message", "Nenhum animal disponível encontrado no momento.");
@@ -67,18 +72,26 @@ public class AIController {
                 }
             }
 
+            String iaReasoning = String.format(
+                "Baseado no seu perfil, recomendamos um animal de porte %s e temperamento %s.",
+                tamanhoSugerido.toLowerCase(),
+                temperamentoSugerido.toString().toLowerCase()
+            );
+
             response.put("success", true);
             response.put("animal", recommendedAnimal);
-            response.put("matchScore", similar.getMatch());
-            response.put("iaReasoning", "Baseado no seu perfil, recomendamos um animal de porte " + tamanhoSugerido);
+            response.put("matchScore", similar.getMatch() > 1 ? similar.getMatch() : similar.getMatch() * 100);
+            response.put("iaReasoning", iaReasoning);
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
+            System.out.println("ERRO NO MATCHING:");
             e.printStackTrace();
+            
             response.put("success", false);
-            response.put("message", "Erro ao executar matching: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            response.put("message", "Erro interno no servidor: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
         }
     }
 }
