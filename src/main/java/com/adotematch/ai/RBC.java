@@ -3,7 +3,6 @@ package com.adotematch.ai;
 public class RBC {
     private final CaseBase caseBase = new CaseBase();
 
-    // Retrieve: Encontra caso similar
     public Case retrieveSimilarCase(Case newCase) {
         Case best = null;
         double minDist = Double.MAX_VALUE;
@@ -14,10 +13,9 @@ public class RBC {
                 best = c;
             }
         }
-        return best;  // Reuse: retorna o caso similar
+        return best;
     }
 
-    // Revise e Retain: simplificado, adicione se necessário
     public void retain(Case newCase) {
         caseBase.addCase(newCase);
     }

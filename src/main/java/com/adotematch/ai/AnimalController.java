@@ -17,12 +17,14 @@ public class AnimalController {
 
     @GetMapping
     public ResponseEntity<List<Animal>> listarTodos() {
-        List<Animal> animais = animalRepository.findAll();
+
+        List<Animal> animais = animalRepository.findAllWithFotos();
         return ResponseEntity.ok(animais);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Animal> buscarPorId(@PathVariable Long id) {
+
         Optional<Animal> animal = animalRepository.findById(id);
         return animal.map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
@@ -30,7 +32,7 @@ public class AnimalController {
 
     @PostMapping
     public ResponseEntity<Animal> criar(@RequestBody Animal animal) {
-        // TODO: Add admin authentication check
+
         Animal novoAnimal = animalRepository.save(animal);
         return ResponseEntity.ok(novoAnimal);
     }

@@ -1,6 +1,7 @@
 package com.adotematch.ai;
 
 import com.adotematch.ai.model.Adotante;
+import com.adotematch.ai.repository.AdotanteRepository;
 import com.adotematch.ai.service.AdotanteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -16,6 +18,9 @@ public class AuthController {
 
     @Autowired
     private AdotanteService adotanteService;
+
+    @Autowired
+    private AdotanteRepository adotanteRepository;
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
@@ -31,16 +36,22 @@ public class AuthController {
         }
 
         boolean isValid = adotanteService.validarLogin(email, senha);
+        
         if (isValid) {
-            response.put("success", true);
-            response.put("message", "Login realizado com sucesso");
 
-            return ResponseEntity.ok(response);
-        } else {
-            response.put("success", false);
-            response.put("message", "Credenciais inválidas");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
+            Optional<Adotante> usuarioLogado = adotanteRepository.findByEmail(email);
+            
+            if (usuarioLogado.isPresent()) {
+                response.put("success", true);
+                response.put("message", "Login realizado com sucesso");
+                response.put("user", usuarioLogado.get());
+                return ResponseEntity.ok(response);
+            }
+        } 
+
+        response.put("success", false);
+        response.put("message", "Credenciais inválidas. Verifique seu e-mail e senha.");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @PostMapping("/register")
@@ -58,9 +69,12 @@ public class AuthController {
             response.put("message", "Usuário cadastrado com sucesso");
             response.put("user", novoAdotante);
             return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
+
             response.put("success", false);
-            response.put("message", "Erro ao cadastrar: " + e.getMessage());
+
+            response.put("message", e.getMessage()); 
             return ResponseEntity.badRequest().body(response);
         }
     }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { PawPrint, User, Mail, Lock, MapPin, Home, Clock, ArrowRight, Loader2 } from "lucide-react";
+import { PawPrint, User, Mail, Lock, MapPin, Home, Clock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState({
     nome: "",
@@ -51,14 +52,13 @@ const RegisterPage = () => {
         });
       }
     } catch (error: any) {
-
       console.error("Erro detalhado no registro:", error);
 
       const serverMessage = error.response?.data?.message || "Erro ao conectar com o servidor.";
 
       toast({
         variant: "destructive",
-        title: "Erro",
+        title: "Atenção",
         description: serverMessage,
       });
     } finally {
@@ -99,8 +99,28 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <Label htmlFor="senha">Senha</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input id="senha" type="password" className="pl-9" placeholder="******" value={formData.senha} onChange={handleChange} required />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="senha" 
+                    type={showPassword ? "text" : "password"}
+                    className="pl-9 pr-10"
+                    placeholder="******" 
+                    value={formData.senha} 
+                    onChange={handleChange} 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
               </div>
 

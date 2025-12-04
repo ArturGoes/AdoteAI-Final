@@ -1,10 +1,34 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AnimalCard from "@/components/AnimalCard";
 import Button from "@/components/Button";
-import { mockAnimals } from "@/data/mockAnimals";
+import { animalApi, Animal as AnimalType } from "@/services/api";
 import { Heart, PawPrint } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const HomePage = () => {
+  const [animals, setAnimals] = useState<AnimalType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnimals = async () => {
+      setIsLoading(true);
+      try {
+        const response = await animalApi.getAll();
+        setAnimals(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar animais:", error);
+
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnimals();
+  }, []);
+
+  const featuredAnimals = animals.filter(a => a.status === 'DISPONIVEL').slice(0, 8);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -62,11 +86,23 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {mockAnimals.map((animal) => (
-              <AnimalCard key={animal.id} animal={animal} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="space-y-3">
+                  <Skeleton className="h-60 w-full rounded-xl" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {featuredAnimals.map((animal) => (
+                <AnimalCard key={animal.id} animal={animal} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -80,16 +116,11 @@ const HomePage = () => {
             Adotar é um ato de amor. Dê a um animal a chance de ter um lar e
             ganhe um companheiro fiel para toda a vida.
           </p>
-          <Button
-            variant="accent"
-            onClick={() =>
-              document
-                .getElementById("animais-section")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-          >
-            Comece sua jornada
-          </Button>
+          <Link to="/buscar">
+             <Button variant="accent">
+                Ver todos os animais
+             </Button>
+          </Link>
         </div>
       </section>
     </div>

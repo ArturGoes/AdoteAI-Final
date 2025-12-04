@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { PawPrint, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { PawPrint, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { z } from "zod";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
-  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
+  senha: z.string().min(1, "A senha é obrigatória"), 
 });
 
 const LoginPage = () => {
@@ -57,10 +57,18 @@ const LoginPage = () => {
         });
         navigate("/");
       } else {
-        setErrors({ general: result.message || "Credenciais inválidas" });
+
+        setErrors({ general: result.message || "Email ou senha incorretos." });
+        
+        toast({
+            variant: "destructive",
+            title: "Falha no Login",
+            description: result.message || "Verifique suas credenciais e tente novamente.",
+        });
       }
     } catch (error) {
-      setErrors({ general: "Erro ao conectar com o servidor" });
+      console.error("Login error:", error);
+      setErrors({ general: "Erro ao conectar com o servidor. Tente novamente mais tarde." });
     } finally {
       setIsLoading(false);
     }
@@ -111,7 +119,7 @@ const LoginPage = () => {
                   )}
                 </div>
 
-                {/* Password */}
+                {/* Password com Olhinho */}
                 <div className="space-y-2">
                   <Label htmlFor="senha" className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-primary" />
@@ -124,13 +132,14 @@ const LoginPage = () => {
                       placeholder="••••••••"
                       value={senha}
                       onChange={(e) => setSenha(e.target.value)}
-                      className={errors.senha ? "border-destructive pr-10" : "pr-10"}
+                      className={`pr-10 ${errors.senha ? "border-destructive" : ""}`}
                       autoComplete="current-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+                      tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -145,7 +154,7 @@ const LoginPage = () => {
 
                 {/* General Error */}
                 {errors.general && (
-                  <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-lg">
+                  <div className="flex items-center gap-2 p-4 bg-destructive/10 text-destructive rounded-lg animate-in fade-in slide-in-from-top-1">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <span>{errors.general}</span>
                   </div>
@@ -158,7 +167,7 @@ const LoginPage = () => {
                   className="w-full text-lg py-3"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Entrando..." : "Entrar"}
+                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Entrar"}
                 </Button>
               </form>
 
@@ -172,7 +181,7 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              {/* Sign Up Link - CORRIGIDO PARA /cadastro */}
+              {/* Sign Up Link */}
               <p className="text-center text-muted-foreground">
                 Não tem uma conta?{" "}
                 <Link to="/cadastro" className="text-primary hover:underline font-medium">
