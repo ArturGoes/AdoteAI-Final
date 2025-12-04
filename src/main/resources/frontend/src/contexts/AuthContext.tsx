@@ -23,7 +23,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
   const logout = React.useCallback(() => {
     setUser(null);
     localStorage.removeItem('adoteai_user');
@@ -48,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const responseInterceptor = api.interceptors.response.use(
       (response) => response,
       (error) => {
+
         if (error.response && error.response.status === 401) {
           logout();
         }

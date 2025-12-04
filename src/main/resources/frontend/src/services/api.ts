@@ -7,24 +7,41 @@ const api = axios.create({
   },
 });
 
-// Tipos
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adoteai_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+
+// ==================================
+// INTERFACES DE TIPO (TYPESCRIPT)
+// ==================================
+
+export interface Abrigo {
+  id: number;
+  nome: string;
+  endereco: string;
+  email: string;
+  telefone: string;
+}
+
 export interface Animal {
   id: number;
   nome: string;
   raca: string;
   idade: number;
-  porte?: string;
   tamanho: string;
   localizacao: string;
   historia?: string;
   temperamento: string;
-  larIdeal?: string;
-  imagemUrl?: string;
   fotos: string[];
-  disponivel?: boolean;
   status: string;
   vacinasTomadas: string[];
   vacinasPendentes: string[];
+  abrigo?: Abrigo; // Adicionada a relação com o abrigo
 }
 
 export interface MatchRequest {
@@ -35,7 +52,7 @@ export interface MatchRequest {
 
 export interface MatchResponse {
   success: boolean;
-  animal?: Animal;
+  animais?: Animal[];
   matchScore?: number;
   iaReasoning?: string;
   message?: string;
@@ -59,9 +76,13 @@ export interface AuthResponse {
   success: boolean;
   message?: string;
   user?: any;
+  token?: string;
 }
 
-// APIs
+// ==================================
+// CHAMADAS DE API
+// ==================================
+
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>('/auth/login', credentials);
@@ -83,6 +104,11 @@ export const matchApi = {
 export const animalApi = {
   getAll: () => api.get<Animal[]>('/animais'),
   getById: (id: number) => api.get<Animal>(`/animais/${id}`),
+};
+
+export const adocaoApi = {
+  solicitar: (animalId: number, adotanteId: number) => 
+    api.post('/adocao', { animalId, adotanteId }),
 };
 
 export default api;
