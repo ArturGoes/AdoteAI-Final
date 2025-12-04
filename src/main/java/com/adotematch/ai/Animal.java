@@ -5,11 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -42,24 +39,20 @@ public class Animal {
 
     private String cor;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_abrigo")
-    private Abrigo abrigo;
-
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection
     @CollectionTable(name = "vacinas_tomadas", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "vacina")
     private Set<String> vacinasTomadas = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection
     @CollectionTable(name = "vacinas_pendentes", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "vacina")
     private Set<String> vacinasPendentes = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection
     @CollectionTable(name = "fotos_animal", schema = "adocao_animais", joinColumns = @JoinColumn(name = "id_animal"))
     @Column(name = "foto_url")
-    private List<String> fotos = new ArrayList<>();
+    private Set<String> fotos = new HashSet<>();
 
     @Column(name = "data_entrada")
     @Temporal(TemporalType.TIMESTAMP)
