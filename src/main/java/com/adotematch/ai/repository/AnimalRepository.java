@@ -16,10 +16,6 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
 
     List<Animal> findByTamanho(String tamanho);
 
-    @Deprecated
-    @Query("SELECT DISTINCT a FROM Animal a LEFT JOIN FETCH a.fotos")
-    List<Animal> findAllWithFotos();
-
     @Query("SELECT DISTINCT a FROM Animal a LEFT JOIN FETCH a.fotos LEFT JOIN FETCH a.vacinasTomadas LEFT JOIN FETCH a.vacinasPendentes")
-    List<Animal> findAllWithDetails();
+    List<Animal> findAllWithFotos();
 }

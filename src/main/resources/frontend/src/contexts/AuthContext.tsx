@@ -1,12 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import api, { authApi, LoginRequest } from '@/services/api';
-import { useNavigate } from 'react-router-dom';
+import { authApi, LoginRequest } from '@/services/api';
 
 interface User {
   id: number;
   email: string;
   nome: string;
-  role: string;
 }
 
 interface AuthContextType {
@@ -22,30 +20,57 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
-  const logout = React.useCallback(() => {
+  useEffect(() => {
+    // Check for stored user on mount
+    const storedUser = localStorage.getItem('adoteai_user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('adoteai_user');
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = async (credentials: LoginRequest) => {
+    try {
+      const response = await authApi.login(credentials);
+      
+      if (response.success && response.user) {
+        setUser(response.user);
+        localStorage.setItem('adoteai_user', JSON.stringify(response.user));
+        if (response.token) {
+          localStorage.setItem('adoteai_token', response.token);
+        }
+        return { success: true };
+      }
+      
+      return { success: false, message: response.message || 'Erro ao fazer login' };
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Erro ao conectar com o servidor';
+      return { success: false, message };
+    }
+  };
+
+  const logout = () => {
     setUser(null);
     localStorage.removeItem('adoteai_user');
     localStorage.removeItem('adoteai_token');
-    navigate('/login');
-  }, [navigate]);
+  };
 
-  useEffect(() => {
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
-    const requestInterceptor = api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('adoteai_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    const responseInterceptor = api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-
-        if (error.response
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
