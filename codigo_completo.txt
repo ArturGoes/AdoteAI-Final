@@ -932,6 +932,7 @@ import com.adotematch.ai.dto.UserResponseDTO;
 import com.adotematch.ai.model.Adotante;
 import com.adotematch.ai.repository.AdotanteRepository;
 import com.adotematch.ai.service.AdotanteService;
+import com.adotematch.ai.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -951,6 +952,9 @@ public class AuthController {
     @Autowired
     private AdotanteRepository adotanteRepository;
 
+    @Autowired
+    private JwtService jwtService;
+
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
         String email = loginRequest.get("email");
@@ -966,13 +970,17 @@ public class AuthController {
         boolean isValid = adotanteService.validarLogin(email, senha);
         
         if (isValid) {
-            Optional<Adotante> usuarioLogado = adotanteRepository.findByEmail(email);
+            Optional<Adotante> usuarioLogadoOpt = adotanteRepository.findByEmail(email);
             
-            if (usuarioLogado.isPresent()) {
+            if (usuarioLogadoOpt.isPresent()) {
+                Adotante usuarioLogado = usuarioLogadoOpt.get();
+
+                String token = jwtService.generateToken(usuarioLogado);
+
                 response.put("success", true);
                 response.put("message", "Login realizado com sucesso");
-
-                response.put("user", UserResponseDTO.fromAdotante(usuarioLogado.get()));
+                response.put("user", UserResponseDTO.fromAdotante(usuarioLogado));
+                response.put("token", token);
                 
                 return ResponseEntity.ok(response);
             }
@@ -994,9 +1002,9 @@ public class AuthController {
             Adotante novoAdotante = adotanteService.salvar(adotante);
             
             response.put("success", true);
-            response.put("message", "Usuário cadastrado com sucesso");
 
-            response.put("user", UserResponseDTO.fromAdotante(novoAdotante));
+            response.put("message", "Usuário cadastrado com sucesso! Por favor, faça o login.");
+
             
             return ResponseEntity.ok(response);
             
@@ -1174,6 +1182,81 @@ public class GlobalExceptionHandler {
     }
 }
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\GlobalExceptionHandler.java ---
+
+
+--- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\JwtAuthFilter.java ---
+package com.adotematch.ai;
+
+import com.adotematch.ai.service.JwtService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.security.Key;
+import java.util.ArrayList;
+
+@Component
+public class JwtAuthFilter extends OncePerRequestFilter {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    private Key getKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String userEmail;
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        jwt = authHeader.substring(7);
+        
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(jwt).getBody();
+            userEmail = claims.getSubject();
+
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UserDetails userDetails = new org.springframework.security.core.userdetails.User(userEmail, "", new ArrayList<>());
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        } catch (Exception e) {
+
+            logger.warn("JWT Token parsing error: " + e.getMessage());
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
+--- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\JwtAuthFilter.java ---
 
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\MatcherIA.java ---
@@ -1394,14 +1477,17 @@ public class RBC {
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\SecurityConfig.java ---
 package com.adotematch.ai;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -1412,20 +1498,29 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/match").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .anyRequest().authenticated()
-            );
+            )
+
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
+    
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -1438,9 +1533,11 @@ public class SecurityConfig {
             "http://192.168.1.33:5173",
             "http://26.206.173.67:5173"
         ));
-        
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
         configuration.setAllowedHeaders(Arrays.asList("*"));
+
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -1746,6 +1843,53 @@ public class AdotanteService {
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\service\AdotanteService.java ---
 
 
+--- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\service\JwtService.java ---
+package com.adotematch.ai.service;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+import com.adotematch.ai.model.Adotante;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+@Service
+public class JwtService {
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private Long expiration;
+
+    private Key getKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    public String generateToken(Adotante adotante) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", adotante.getId());
+        claims.put("nome", adotante.getNome());
+        claims.put("role", adotante.getRole().name());
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(adotante.getEmail())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+}
+--- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\service\JwtService.java ---
+
+
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\java\com\adotematch\ai\service\MatchService.java ---
 package com.adotematch.ai.service;
 
@@ -1851,11 +1995,10 @@ public class MatchService {
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\application.properties ---
 spring.application.name=ai
+server.port=8081
 
 # =====================================================
 # CONFIGURAÇÃO DO BANCO DE DADOS (USANDO VARIÁVEIS DE AMBIENTE)
-# CORREÇÃO CRÍTICA DE SEGURANÇA: As credenciais foram removidas do código.
-# Você deve configurar estas variáveis no seu ambiente de desenvolvimento/produção.
 # =====================================================
 spring.datasource.url=${DB_URL}
 spring.datasource.username=${DB_USERNAME}
@@ -1863,28 +2006,32 @@ spring.datasource.password=${DB_PASSWORD}
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 # =====================================================
+# CONFIGURAÇÕES DO POOL DE CONEXÕES HIKARI
+# =====================================================
+
+spring.datasource.hikari.keepalive-time=200000
+
+spring.datasource.hikari.max-lifetime=280000
+
+# =====================================================
 # CONFIGURAÇÕES DO JPA/HIBERNATE
 # =====================================================
-# 'update': atualiza o schema do banco de dados automaticamente. Bom para desenvolvimento.
-spring.jpa.hibernate.ddl-auto=update
-# 'true': mostra as queries SQL geradas pelo Hibernate no console. Ótimo para debug.
-spring.jpa.show-sql=true
+
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-# 'false': boa prática para evitar problemas de performance e LazyInitializationException.
+
+spring.jpa.hibernate.ddl-auto=update
+
 spring.jpa.open-in-view=false
 
-# =====================================================
-# CONFIGURAÇÃO DO SERVIDOR
-# =====================================================
-server.port=8081
+spring.jpa.show-sql=true
 
-# =====================================================
-# CONFIGURAÇÕES DE LOG
-# Nível DEBUG para obter mais detalhes durante o desenvolvimento.
-# =====================================================
 logging.level.org.springframework=DEBUG
 logging.level.org.hibernate.SQL=DEBUG
 logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+
+jwt.secret=sua-chave-secreta-muito-forte-e-longa-com-pelo-menos-256-bits-de-entropia
+
+jwt.expiration=86400000
 --- FIM DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\application.properties ---
 
 
@@ -7049,7 +7196,8 @@ export { useToast, toast };
 
 --- INICIO DO ARQUIVO: C:\Users\Artur\Desktop\AdoteAI-Final\src\main\resources\frontend\src\contexts\AuthContext.tsx ---
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import api, { authApi, LoginRequest, AuthResponse } from '@/services/api';
+import api, { authApi, LoginRequest } from '@/services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -7068,36 +7216,58 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('adoteai_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-// ===================================================================
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const logout = React.useCallback(() => {
+    setUser(null);
+    localStorage.removeItem('adoteai_user');
+    localStorage.removeItem('adoteai_token');
+
+    navigate('/login');
+  }, [navigate]);
 
   useEffect(() => {
+
+    const requestInterceptor = api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('adoteai_token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    const responseInterceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+
+        if (error.response && error.response.status === 401) {
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
     const storedUser = localStorage.getItem('adoteai_user');
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
       } catch {
-        localStorage.removeItem('adoteai_user');
-        localStorage.removeItem('adoteai_token');
+
+        logout();
       }
     }
     setIsLoading(false);
-  }, []);
+
+    return () => {
+      api.interceptors.request.eject(requestInterceptor);
+      api.interceptors.response.eject(responseInterceptor);
+    };
+  }, [logout]);
 
   const login = async (credentials: LoginRequest): Promise<{ success: boolean; message?: string }> => {
     try {
@@ -7116,12 +7286,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const message = error.response?.data?.message || 'Erro ao conectar com o servidor';
       return { success: false, message };
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('adoteai_user');
-    localStorage.removeItem('adoteai_token');
   };
 
   return (

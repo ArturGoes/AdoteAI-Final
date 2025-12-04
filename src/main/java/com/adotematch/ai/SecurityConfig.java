@@ -33,6 +33,19 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
             .authorizeHttpRequests(authz -> authz
+
+                .requestMatchers(
+                    "/",
+                    "/index.html",
+                    "/assets/**",
+                    "/*.ico",
+                    "/*.png",
+                    "/*.svg",
+                    "/*.jpg",
+                    "/*.json",
+                    "/manifest.json"
+                ).permitAll()
+                // FIM DA CORREÇÃO
                 .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/match").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
